@@ -1,0 +1,4 @@
+enjoy = "Hello World!"
+random = 42
+
+main = puts(enjoy)
