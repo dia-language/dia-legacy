@@ -4,8 +4,14 @@
 
 #include "dia.tab.h"
 
-extern FILE* yyin;
+#undef DIA_DEBUG
+#define DIA_DEBUG(...) (DIA_VERBOSE_LEVEL < 1 ? : fprintf(stderr, "[DIA:main.c] " __VA_ARGS__))
 
+extern FILE* yyin;
+extern FILE* yyout;
+
+char DIA_VERSION[] = "dia-2024.07.15.alpha";
+char* DIA_CODE_FILE_NAME;
 uint8_t DIA_VERBOSE_LEVEL;
 
 void dia_help() {
@@ -44,8 +50,10 @@ int main(int argc, char** argv) {
 
   // diac example/hello.dia
   // There should be '.dia' at the end of the argv[1].
-  else if (strstr(argv[1], ".dia") - (strlen(argv[1]) - 4) == argv[1] )
+  else if (strstr(argv[1], ".dia") - (strlen(argv[1]) - 4) == argv[1] ) {
     yyin = fopen(argv[1], "r");
+    DIA_CODE_FILE_NAME = argv[1];
+  }
 
     // To deal with options without getopt().
     dia_option_table table[] = {

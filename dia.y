@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdint.h>
 
+// Pre-defined functions
+#include "dia.h"
+
 #undef DIA_DEBUG
 #define DIA_DEBUG(...) (DIA_VERBOSE_LEVEL < 1 ? : fprintf(stderr, "[DIA:dia.y] " __VA_ARGS__))
 
@@ -41,8 +44,6 @@ extern void yyerror(const char*);
 
 %token <str> DIA_IDENTIFIER
 
-%type <
-
 %%
 
 /* enjoy = "Enjoy the flexivity of the Dia language!"
@@ -53,7 +54,7 @@ extern void yyerror(const char*);
  */
 
 dia: custom_func dia                       { DIA_DEBUG("Welcome to the Dia World! main function with custom functions detected!\n"); }
-   | DIA_MAIN_FUNC DIA_ALLOC dia_expr      { DIA_DEBUG("Welcome to the Dia World! main function detected!\n"); }
+   | DIA_MAIN_FUNC DIA_ALLOC dia_expr      { dia_main(); DIA_DEBUG("Welcome to the Dia World! main function detected!\n"); }
    ;
 
 custom_func:
@@ -66,38 +67,28 @@ dia_expr: dia_expr DIA_BIND dia_expr                 { DIA_DEBUG("Reserved for D
         | dia_function
         ;
 
-dia_function: DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PARENTHESIS    { DIA_DEBUG("[DIA] Function Name: %s\n", $1); }
-            | DIA_IDENTIFIER                           { DIA_DEBUG("[DIA] Function Name: %s\n", $1); }
+dia_function: DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PARENTHESIS    { DIA_DEBUG("Function Name: %s\n", $1); }
+            | DIA_IDENTIFIER                           { DIA_DEBUG("Function Name: %s\n", $1); }
             | token
             ;
+
+dia_if: "if" DIA_OPEN_PARENTHESIS dia_expr DIA_CLOSE_PARENTHESIS dia_else;
+
+dia_else: "else" dia_if
+        | "else" DIA_OPEN_PARENTHESIS dia_expr DIA_CLOSE_PARENTHESIS
+        ;
 
 dia_parameters: dia_function                        { DIA_DEBUG("Function Parameter\n"); }
               | dia_function "," dia_parameters
               ;
 
-token: DIA_STRING         { $$ = dia_string($1); }
-     | DIA_INTEGER        { $$ = dia_integer($1); }
-     | DIA_DOUBLE         { $$ = dia_double($1); }
+token: DIA_STRING         { $<str>$ = dia_string($1); }
+     | DIA_INTEGER        { $<i>$ = dia_integer($1); }
+     | DIA_DOUBLE         { $<f>$ = dia_double($1); }
      ;
 
 
 %%
-
-inline char* dia_string(char* arg) {
-  DIA_DEBUG("[DIA] Dia String: %s\n", $1);
-  return arg;
-}
-
-inline int dia_integer(int arg) {
-  DIA_DEBUG("[DIA] Dia Integer: %d\n", $1);
-  return arg;
-}
-
-inline double dia_double(double arg) {
-  DIA_DEBUG("[DIA] Dia Double: %lf\n", $1);
-  return arg;
-}
-
 
 void yyerror(const char *str) {
   puts("diac: There was an error while parsing the code");

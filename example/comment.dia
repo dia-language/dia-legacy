@@ -4,3 +4,5 @@
 /* I'm currently looking for way to
  * deal with the multi-line comments!
  */
+
+main = puts("Hello World!" /* I'm pretty sure this block of comment will be ignored. */)

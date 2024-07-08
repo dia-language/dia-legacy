@@ -4,7 +4,8 @@ MAKE=make
 compiler:
 	bison -d dia.y
 	flex dia.l
-	$(CC) -o diac main.c dia.tab.c lex.yy.c -lfl
+	$(CC) -c dia.c -o dia.o
+	$(CC) -o diac main.c dia.o dia.tab.c lex.yy.c -lfl
 	$(MAKE) clean_sources
 
 lexer:
