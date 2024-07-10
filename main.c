@@ -6,6 +6,8 @@
 
 #undef DIA_DEBUG
 #define DIA_DEBUG(...) (DIA_VERBOSE_LEVEL < 1 ? : fprintf(stderr, "[DIA:main.c] " __VA_ARGS__))
+#undef DIA_DEBUG_2
+#define DIA_DEBUG_2(...) (DIA_VERBOSE_LEVEL < 2 ? : fprintf(stderr, "[DIA:main.c] " __VA_ARGS__))
 
 extern FILE* yyin;
 extern FILE* yyout;
@@ -24,10 +26,9 @@ void dia_help() {
 void dia_verbosity(char* argument) {
   DIA_VERBOSE_LEVEL = 1;
 
-  printf("Dia: Set verbosity level %d\n", DIA_VERBOSE_LEVEL);
-
-  for(int i=2; argument[i] == 'v'; i++)
+  for(int i=2; argument[i] == 'v' && i <= 4; i++)
     ++DIA_VERBOSE_LEVEL;
+  printf("Dia: Set verbosity level %d\n", DIA_VERBOSE_LEVEL);
 }
 
 typedef struct {
@@ -62,7 +63,7 @@ int main(int argc, char** argv) {
 
   for (int i=1; argv[i] != NULL; i++) {
     for (int j=0; j<sizeof(table)/sizeof(table[0]); j++) {
-      if (strstr(table[j].option, argv[i]))
+      if (strstr(argv[i], table[j].option))
         table[j].handler(argv[i]);
     }
   }

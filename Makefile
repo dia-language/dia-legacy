@@ -13,7 +13,7 @@ lexer:
 	$(CC) lex.yy.c -o dia_lexer -lfl
 
 clean_sources:
-	rm lex.yy.c dia.tab.c dia.tab.h
+	rm lex.yy.c dia.tab.c dia.tab.h *.o
 
 clean: clean_sources
 	rm dia_lexer diac

@@ -40,7 +40,8 @@ void _dia_comment_generating() {
   FILE* source_file = fopen(DIA_CODE_FILE_NAME, "r");
   while(1) {
     char c = fgetc(source_file);
-    if (c == EOF) {
+    DIA_DEBUG_2("read byte %02x from the %s file;\n", c, DIA_CODE_FILE_NAME);
+    if (c == EOF || c == 0xff) {
       fputs("\n", yyout);
       break;
     }
