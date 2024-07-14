@@ -79,14 +79,15 @@ dia_function: DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PAREN
                                                                                             _node->name = strdup($1);
                                                                                             _node->next_parameter = $<node>3;
 
-                                                                                            DIA_DEBUG("=== Function Structured ===\n");
+                                                                                            DIA_DEBUG("=== Function Structure description ===\n");
                                                                                             DIA_DEBUG("Function Name: %s\n", $1);
 
                                                                                             // node traversal to generate parameters
-                                                                                            for (dia_node* __node = _node; __node != NULL; __node = __node->next_parameter)
+                                                                                            for (dia_node* __node = _node->next_parameter; __node != NULL; __node = __node->next_parameter)
                                                                                               DIA_DEBUG("- Parameter: %s\n", __node->name);
 
 
+                                                                                            DIA_DEBUG("=== Function Structure description ===\n");
                                                                                             $<node>$ = _node;
                                                                                           }
             | DIA_IDENTIFIER                          {
@@ -112,13 +113,15 @@ dia_parameters: dia_function
 
                   $<node>$ = $<node>1;
                 }
-              | dia_function DIA_COMMA dia_parameters
+              | dia_parameters DIA_COMMA dia_function
                 {
-                  dia_node* _node = (dia_node*)malloc(sizeof(dia_node));
-                  _node->next_parameter = $<node>3;
+                  dia_node* __node = $<node>1;
+                  for (; __node->next_parameter != NULL; __node = __node->next_parameter)
+                    DIA_DEBUG("__node->name : %s\n", __node->name);
+                  __node->next_parameter = $<node>3;
 
-                  DIA_DEBUG("+- Function Parameter: %s,%s\n", $<str>1, $<str>3);
-                  $<node>$ = _node;
+                  DIA_DEBUG("+- Function Parameter: %s ... %s\n", $<node>1->name, $<node>3->name);
+                  $<node>$ = $<node>1;
                 }
               ;
 
