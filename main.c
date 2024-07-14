@@ -45,9 +45,17 @@ int main(int argc, char** argv) {
   }
   puts("]");
 
+  if (argc == 1) {
+    puts("Dia: Switch to the interactive mode.");
+    puts("This is an example of dia programming language\n");
+    puts("main = \"Hello World!\".puts\n");
+  }
+
   // diac --help
-  if (argc == 2 && !strncmp(argv[1], "--help", 6))
+  else if (argc == 2 && !strncmp(argv[1], "--help", 6)) {
     dia_help();
+    return 0;
+  }
 
   // diac example/hello.dia
   // There should be '.dia' at the end of the argv[1].
@@ -56,10 +64,11 @@ int main(int argc, char** argv) {
     DIA_CODE_FILE_NAME = argv[1];
   }
 
-    // To deal with options without getopt().
-    dia_option_table table[] = {
-      {"-v", dia_verbosity},
-    };
+
+  // To deal with options without getopt().
+  dia_option_table table[] = {
+    {"-v", dia_verbosity},
+  };
 
   for (int i=1; argv[i] != NULL; i++) {
     for (int j=0; j<sizeof(table)/sizeof(table[0]); j++) {

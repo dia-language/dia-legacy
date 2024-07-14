@@ -24,18 +24,47 @@ void yyerror(const char* str);
 \/\*(.|\n)*\*\/             { DIA_DEBUG("Multi-line comment! (/* ... */)\n"); }
 
 0x[0-9a-fA-F]+              { DIA_DEBUG("DIA_HEXADECIMAL: %s\n", yytext);
-                              yylval.i = atoi(yytext);
+
+                              dia_node* node = (dia_node*) malloc(sizeof(dia_node));
+                              node->name = strndup(yytext, yyleng);
+                              node->generated_code = strndup(yytext, yyleng);
+                              node->type = DIA_INTEGER;
+
+                              yylval.node = node;
                               return DIA_INTEGER; }
+
 [0-9]+\.[0-9]+              { DIA_DEBUG("DIA_DOUBLE: %s\n", yytext);
-                              yylval.f = atof(yytext);
+
+                              dia_node* node = (dia_node*) malloc(sizeof(dia_node));
+                              node->name = strndup(yytext, yyleng);
+                              node->generated_code = strndup(yytext, yyleng);
+                              node->type = DIA_DOUBLE;
+
+                              yylval.node = node;
                               return DIA_DOUBLE; }
+
 [[1-9][0-9]*|0]             { DIA_DEBUG("DIA_INTEGER: %s\n", yytext);
-                              yylval.i = atoi(yytext);
+
+                              dia_node* node = (dia_node*) malloc(sizeof(dia_node));
+                              node->name = strndup(yytext, yyleng);
+                              node->generated_code = strndup(yytext, yyleng);
+                              node->type = DIA_INTEGER;
+
+                              yylval.node = node;
+
                               return DIA_INTEGER; }
+
 \"([^\\\"]|\\.)*\"          { DIA_DEBUG("DIA_STRING: %s\n", yytext);
-                              yylval.str = yytext;
+                              dia_node* node = (dia_node*) malloc(sizeof(dia_node));
+                              node->name = strndup(yytext, yyleng);
+                              node->generated_code = strndup(yytext, yyleng);
+                              node->type = DIA_STRING;
+
+                              yylval.node = node;
+
                               return DIA_STRING; }
 
+","                         { DIA_DEBUG("DIA_COMMA\n"); return DIA_COMMA; }
 "."                         { DIA_DEBUG("DIA_BIND\n"); return DIA_BIND; }
 ";"                         { DIA_DEBUG("DIA_NEXT\n"); return DIA_NEXT; }
 
