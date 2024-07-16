@@ -5,21 +5,35 @@ extern char DIA_VERSION[];
 extern char* DIA_CODE_FILE_NAME;
 extern FILE* yyout;
 
-char* dia_string(char* arg) {
-  DIA_DEBUG("Dia String: %s\n", arg);
+dia_node* dia_string(dia_node* arg) {
+  DIA_DEBUG("Dia String: %s\n", arg->name);
   return arg;
 }
 
-int dia_integer(int arg) {
-  DIA_DEBUG("Dia Integer: %d\n", arg);
+dia_node* dia_integer(dia_node* arg) {
+  DIA_DEBUG("Dia Integer: %s\n", arg->name);
   return arg;
 }
 
-double dia_double(double arg) {
-  DIA_DEBUG("Dia Double: %lf\n", arg);
+dia_node* dia_double(dia_node* arg) {
+  DIA_DEBUG("Dia Double: %s\n", arg->name);
   return arg;
 }
 
+
+// Predefined functions
+
+void dia_puts() {
+  DIA_DEBUG("dia_puts\n");
+
+  fputs("std::cout << ", yyout);
+
+  fputs("std::endl", yyout);
+}
+
+void dia_print() {
+  DIA_DEBUG("dia_print\n");
+}
 
 // The main function
 
@@ -40,7 +54,8 @@ void _dia_comment_generating() {
   FILE* source_file = fopen(DIA_CODE_FILE_NAME, "r");
   while(1) {
     char c = fgetc(source_file);
-    if (c == EOF) {
+    DIA_DEBUG_2("read byte %02x from the %s file;\n", c, DIA_CODE_FILE_NAME);
+    if (c == EOF || c == 0xff) {
       fputs("\n", yyout);
       break;
     }
@@ -55,8 +70,13 @@ void _dia_comment_generating() {
   fputs(" */\n", yyout);
 }
 
-void dia_main() {
+void dia_main(dia_node* node) {
   _dia_comment_generating();
 
   DIA_DEBUG("Generating the main function code...\n");
+
+  fputs("int main(int argc, char** argv) {", yyout);
+
+
+  fputs("}", yyout);
 }
