@@ -11,6 +11,7 @@ extern uint8_t DIA_VERBOSE_LEVEL;
 extern char* yytext;
 extern int yylex();
 extern void yyerror(const char*);
+
 %}
 
 /* The lines start with %token will generate .tab.h file
@@ -19,6 +20,7 @@ extern void yyerror(const char*);
 
 %code requires {
 #include "dia.h"
+void dia_debug_function_descriptor(dia_node* node);
 }
 
 %union {
@@ -66,7 +68,16 @@ custom_func:
            ;
 
 dia_expr: dia_expr DIA_BIND dia_expr                 {
+                                                        dia_node* _previous = $<node>1;
+                                                        dia_node* _next = $<node>3;
+
+                                                        dia_node* _tmp = _next->next_parameter;
+                                                        _next->next_parameter = _previous;
+                                                        _previous->next_parameter = _tmp;
+
                                                         DIA_DEBUG("DIA_BIND: To weave function parameter to the adjacent(next) function.\n");
+
+                                                        dia_debug_function_descriptor(_next);
                                                      }
         | dia_expr DIA_NEXT dia_expr                 { DIA_DEBUG("Reserved for DIA_NEXT\n"); }
         | dia_expr DIA_NEXT                          { DIA_DEBUG("Semicolon Terminated\n"); }
@@ -79,15 +90,8 @@ dia_function: DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PAREN
                                                                                             _node->name = strdup($1);
                                                                                             _node->next_parameter = $<node>3;
 
-                                                                                            DIA_DEBUG("=== Function Structure description ===\n");
-                                                                                            DIA_DEBUG("Function Name: %s\n", $1);
+                                                                                            dia_debug_function_descriptor(_node);
 
-                                                                                            // node traversal to generate parameters
-                                                                                            for (dia_node* __node = _node->next_parameter; __node != NULL; __node = __node->next_parameter)
-                                                                                              DIA_DEBUG("- Parameter: %s\n", __node->name);
-
-
-                                                                                            DIA_DEBUG("=== Function Structure description ===\n");
                                                                                             $<node>$ = _node;
                                                                                           }
             | DIA_IDENTIFIER                          {
@@ -95,6 +99,9 @@ dia_function: DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PAREN
 
                                                         dia_node* _node = (dia_node*)malloc(sizeof(dia_node));
                                                         _node->name = strdup($1);
+
+                                                        dia_debug_function_descriptor(_node);
+
                                                         $<node>$ = _node;
                                                       }
             | token
@@ -132,6 +139,18 @@ token: DIA_STRING         { $<node>$ = dia_string($1); }
 
 
 %%
+
+void dia_debug_function_descriptor(dia_node* node) {
+  DIA_DEBUG("=== Function Structure description ===\n");
+  DIA_DEBUG("Function Name: %s\n", node->name);
+
+  // node traversal to generate parameters
+  for (dia_node* _node = node->next_parameter; _node != NULL; _node = _node->next_parameter)
+    DIA_DEBUG("- Parameter: %s\n", _node->name);
+
+  DIA_DEBUG("=== Function Structure description ===\n");
+  return;
+}
 
 /*
 char* dia_generate_code(char* dia_identifier, int number_of_args, YYSTYPE* args) {
