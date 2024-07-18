@@ -16,7 +16,14 @@ typedef int DIA_TOKEN_TYPE;
 typedef struct _dia_node {
   char* name;
   char* generated_code;
-  struct _dia_node* next_parameter;
+  struct _dia_node* next_parameter;     /* This will be used to store the add-
+                                         * ress of the function parameters
+                                         * in a single linked list.
+                                         */
+  struct _dia_node* next_function;      /* This will be held the next chain of
+                                         * function, that will be used to chain
+                                         * the next function.
+                                         */
   DIA_TOKEN_TYPE type;
 } dia_node;
 

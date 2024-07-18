@@ -79,8 +79,15 @@ dia_expr: dia_expr DIA_BIND dia_expr                 {
 
                                                         dia_debug_function_descriptor(_next);
                                                      }
-        | dia_expr DIA_NEXT dia_expr                 { DIA_DEBUG("Reserved for DIA_NEXT\n"); }
-        | dia_expr DIA_NEXT                          { DIA_DEBUG("Semicolon Terminated\n"); }
+        | dia_expr DIA_NEXT dia_expr                 {
+                                                        $<node>1->next_function = $<node>3;
+                                                        DIA_DEBUG("Reserved for DIA_NEXT\n");
+                                                        $<node>$ = $<node>1;
+                                                     }
+        | dia_expr DIA_NEXT                          {
+                                                        DIA_DEBUG("Semicolon Terminated\n");
+                                                        $<node>$ = $<node>1;
+                                                     }
         | dia_function
         ;
 
@@ -95,8 +102,6 @@ dia_function: DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PAREN
                                                                                             $<node>$ = _node;
                                                                                           }
             | DIA_IDENTIFIER                          {
-                                                        DIA_DEBUG("Function Name: %s\n", $1);
-
                                                         dia_node* _node = (dia_node*)malloc(sizeof(dia_node));
                                                         _node->name = strdup($1);
 
