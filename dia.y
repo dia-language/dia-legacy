@@ -60,7 +60,20 @@ void dia_debug_function_descriptor(dia_node* node);
  */
 
 dia: custom_func dia                       { DIA_DEBUG("Welcome to the Dia World! main function with custom functions detected!\n"); }
-   | DIA_MAIN_FUNC DIA_ALLOC dia_expr      { dia_main($<node>3); DIA_DEBUG("Welcome to the Dia World! main function detected!\n"); }
+   | DIA_MAIN_FUNC DIA_ALLOC dia_expr      {
+                                              DIA_DEBUG("Welcome to the Dia World! main function detected!\n");
+                                              DIA_DEBUG("Lemme write down bill of main function...\n");
+                                              DIA_DEBUG("=== Main Function Started ===\n");
+                                              for (dia_node* _node = $<node>3; _node != NULL; _node = _node->next_function) {
+                                                DIA_DEBUG("Main Function\n");
+                                                DIA_DEBUG("- Function name: %s\n", _node->name);
+                                                for (dia_node* _param = _node->next_parameter; _param != NULL; _param = _param->next_parameter)
+                                                  DIA_DEBUG("-- param: %s\n", _param->name);
+                                              }
+                                              DIA_DEBUG("=== Main Function Concluded ===\n\n");
+
+                                              dia_main($<node>3);
+                                           }
    ;
 
 custom_func:
@@ -78,6 +91,7 @@ dia_expr: dia_expr DIA_BIND dia_expr                 {
                                                         DIA_DEBUG("DIA_BIND: To weave function parameter to the adjacent(next) function.\n");
 
                                                         dia_debug_function_descriptor(_next);
+                                                        $<node>$ = _next;
                                                      }
         | dia_expr DIA_NEXT dia_expr                 {
                                                         $<node>1->next_function = $<node>3;
@@ -157,29 +171,9 @@ void dia_debug_function_descriptor(dia_node* node) {
   return;
 }
 
-/*
-char* dia_generate_code(char* dia_identifier, int number_of_args, YYSTYPE* args) {
-  va_list args;
-  char* _generated_code = (char*)malloc(120*sizeof(char)); // Less than 120 characters per line is advisable, isn't it?
-
-  typedef struct {
-    char* identifier;
-    (void)(*handler)();
-  } dia_predefined_function;
-
-  dia_predefined_function functions[] = {
-    {"puts", dia_puts},
-    {"print", dia_print},
-  }
-
-  for(int i=0; i<sizeof(args)/sizeof(YYSTYPE)
-}
-*/
-
 void yyerror(const char *str) {
   puts("diac: There was an error while parsing the code");
   printf("[DIA:Error] %s\n", str);
 
   return;
 }
-

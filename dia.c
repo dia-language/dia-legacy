@@ -20,20 +20,76 @@ dia_node* dia_double(dia_node* arg) {
   return arg;
 }
 
+// Utility
+void dia_free_node (dia_node* node) {
+  /* dia_node
+   * - name (char*)
+   * - generated_code (char*)
+   * - next_parameter (dia_node*)
+   * - next_function  (dia_node*)
+   */
+
+  // This might take time, because the structure of dia_node is
+  // a single linked list. I should benchmark and calculate which
+  // approach would be appropriate.
+  if (node->next_parameter != NULL)  dia_free_node(node->next_parameter);
+  if (node->next_function != NULL)   dia_free_node(node->next_function);
+  if (node->name != NULL) {
+    memset(node->name, 0, strlen(node->name));
+    free(node->name);
+  }
+
+  memset(node, 0, sizeof(dia_node));
+  free(node);
+}
 
 // Predefined functions
 
-void dia_puts() {
+void dia_puts(dia_node* node) {
   DIA_DEBUG("dia_puts\n");
+  // We don't need to check type of parameters;
 
-  fputs("std::cout << ", yyout);
-
-  fputs("std::endl", yyout);
+  fputs("std::cout<<", yyout);
+  for (node = node->next_parameter; node != NULL; node = node->next_parameter)
+    fprintf(yyout, "%s<<", node->name);
+  fputs("std::endl;\n", yyout);
 }
 
-void dia_print() {
+void dia_print(dia_node* node) {
   DIA_DEBUG("dia_print\n");
+  // We don't need to check type of parameters;
+
+  fputs("std::cout<<", yyout);
+  for (node = node->next_parameter; node != NULL; node = node->next_parameter)
+    fprintf(yyout, "%s<<", node->name);
+  fputs("std::endl;\n", yyout);
 }
+
+
+// Generate function
+void dia_generate_code(dia_node* node) {
+  typedef struct {
+    char* identifier;
+    void (*handler)(dia_node* node);
+  } dia_predefined_function;
+
+  dia_predefined_function functions[] = {
+    {"puts", dia_puts},
+    {"print", dia_print},
+  };
+
+  if (strcmp(node->name, "puts"))
+    dia_puts(node);
+
+  else if (strcmp(node->name, "print"))
+    dia_print(node);
+
+  else
+    fprintf(stderr, "Undefined method: %s\n", node->name);
+
+  return;
+}
+
 
 // The main function
 
@@ -55,7 +111,7 @@ void _dia_comment_generating() {
   while(1) {
     char c = fgetc(source_file);
     DIA_DEBUG_2("read byte %02x from the %s file;\n", c, DIA_CODE_FILE_NAME);
-    if (c == EOF || c == 0xff) {
+    if (c == EOF || c == (char)0xff) {
       fputs("\n", yyout);
       break;
     }
@@ -75,8 +131,12 @@ void dia_main(dia_node* node) {
 
   DIA_DEBUG("Generating the main function code...\n");
 
-  fputs("int main(int argc, char** argv) {", yyout);
+  fputs("#include<iostream>\n", yyout);
+  fputs("int main(int argc, char** argv) {\n", yyout);
 
+  for (dia_node* _node = node; _node != NULL; _node = _node->next_function)
+    dia_generate_code(_node);
 
   fputs("}", yyout);
+  dia_free_node(node);
 }

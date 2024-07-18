@@ -32,9 +32,10 @@ dia_node* dia_integer(dia_node* arg);
 dia_node* dia_double(dia_node* arg);
 
 // Pre-defined functions
-void dia_print();
-void dia_puts();
+void dia_print(dia_node* node);
+void dia_puts(dia_node* node);
 
+void dia_generate_code(dia_node* node);
 
 void dia_main(dia_node* node);
 

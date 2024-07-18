@@ -28,7 +28,7 @@ void dia_verbosity(char* argument) {
 
   for(int i=2; argument[i] == 'v' && i <= 4; i++)
     ++DIA_VERBOSE_LEVEL;
-  printf("Dia: Set verbosity level %d\n", DIA_VERBOSE_LEVEL);
+  fprintf(stderr, "Dia: Set verbosity level %d\n", DIA_VERBOSE_LEVEL);
 }
 
 typedef struct {
@@ -37,13 +37,13 @@ typedef struct {
 } dia_option_table;
 
 int main(int argc, char** argv) {
-  printf("argc: %d\n", argc);
+  fprintf(stderr, "argc: %d\n", argc);
 
-  printf("argv: [");
+  fprintf(stderr, "argv: [");
   for(int i=0; i<argc; i++) {
-    printf(" %s ", argv[i]);
+    fprintf(stderr, " %s ", argv[i]);
   }
-  puts("]");
+  fputs("]\n", stderr);
 
   if (argc == 1) {
     puts("Dia: Switch to the interactive mode.");
