@@ -78,13 +78,19 @@ void dia_generate_code(dia_node* node) {
     {"print", dia_print},
   };
 
-  if (strcmp(node->name, "puts"))
-    dia_puts(node);
+  int i=0;
+  int size = sizeof(functions) / sizeof(functions[0]);
 
-  else if (strcmp(node->name, "print"))
-    dia_print(node);
+  printf("size: %d\n", size);
 
-  else
+  for (; i<size; i++) {
+    if(!strcmp(node->name, functions[i].identifier)) {
+      functions[i].handler(node);
+      break;
+    }
+  }
+
+  if (i == size)
     fprintf(stderr, "Undefined method: %s\n", node->name);
 
   return;

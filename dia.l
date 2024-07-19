@@ -64,6 +64,11 @@ void yyerror(const char* str);
 
                               return DIA_STRING; }
 
+"+"                         { DIA_DEBUG("DIA_PLUS\n"); return DIA_PLUS; }
+"-"                         { DIA_DEBUG("DIA_MINUS\n"); return DIA_MINUS; }
+"*"                         { DIA_DEBUG("DIA_MUL\n"); return DIA_MUL; }
+"/"                         { DIA_DEBUG("DIA_DIV\n"); return DIA_DIV; }
+
 ","                         { DIA_DEBUG("DIA_COMMA\n"); return DIA_COMMA; }
 "."                         { DIA_DEBUG("DIA_BIND\n"); return DIA_BIND; }
 ";"                         { DIA_DEBUG("DIA_NEXT\n"); return DIA_NEXT; }

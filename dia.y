@@ -39,6 +39,11 @@ void dia_debug_function_descriptor(dia_node* node);
 %token DIA_MAIN_FUNC          "main"
 %token DIA_ALLOC              "="
 
+%token DIA_PLUS               "+"
+%token DIA_MINUS              "-"
+%token DIA_MUL                "*"
+%token DIA_DIV                "/"
+
 %token DIA_COMMA              ","
 %token DIA_BIND               "."
 %token DIA_NEXT               ";"
