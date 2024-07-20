@@ -20,6 +20,7 @@ extern void yyerror(const char*);
 
 %code requires {
 #include "dia.h"
+#include "dia_calculation.h"
 }
 
 %union {
@@ -38,10 +39,29 @@ extern void yyerror(const char*);
 %token DIA_MAIN_FUNC          "main"
 %token DIA_ALLOC              "="
 
+/* Calculation */
 %token DIA_PLUS               "+"
 %token DIA_MINUS              "-"
 %token DIA_MUL                "*"
 %token DIA_DIV                "/"
+%token DIA_MOD                "%"
+
+%token DIA_LOGICAL_AND
+%token DIA_LOGICAL_OR
+%token DIA_LOGICAL_NOT
+
+%token DIA_EQUAL              "=="
+%token DIA_GREATER_EQUAL      ">="
+%token DIA_GREATER            ">"
+%token DIA_LESS_EQUAL         "<="
+%token DIA_LESS               "<"
+
+%token DIA_BIT_AND            "&"
+%token DIA_BIT_XOR
+%token DIA_BIT_OR             "|"
+%token DIA_BIT_NOT            "~"
+
+/* Calculation: End */
 
 %token DIA_COMMA              ","
 %token DIA_BIND               "."
@@ -119,6 +139,7 @@ dia_function: DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PAREN
 
                 $<node>$ = _node;
               }
+            | dia_calculation
             | token
             ;
 
@@ -146,6 +167,37 @@ dia_parameters: dia_function
                   $<node>$ = $<node>1;
                 }
               ;
+
+/* Calculation */
+dia_calculation: dia_arithmetic
+               | dia_logical
+               | dia_comparison
+               | dia_bitwise
+               ;
+
+dia_arithmetic: token DIA_PLUS token      { $<node>$ = dia_plus($<node>1, $<node>3); }
+              | token DIA_MINUS token     { $<node>$ = dia_minus($<node>1, $<node>3); }
+              | token DIA_MUL token       { $<node>$ = dia_mul($<node>1, $<node>3); }
+              | token DIA_DIV token       { $<node>$ = dia_div($<node>1, $<node>3); }
+              | token DIA_MOD token       { $<node>$ = dia_mod($<node>1, $<node>3); }
+              ;
+
+dia_logical: token DIA_LOGICAL_AND token  { $<node>$ = dia_logical_and($<node>1, $<node>3); }
+           | token DIA_LOGICAL_OR token   { $<node>$ = dia_logical_or($<node>1, $<node>3); }
+           |       DIA_LOGICAL_NOT token  { $<node>$ = dia_logical_not($<node>2); }
+           ;
+
+dia_comparison: token DIA_EQUAL token         { $<node>$ = dia_equal($<node>1, $<node>3); }
+              | token DIA_GREATER_EQUAL token { $<node>$ = dia_greater_equal($<node>1, $<node>3); }
+              | token DIA_GREATER token       { $<node>$ = dia_greater($<node>1, $<node>3); }
+              | token DIA_LESS_EQUAL token    { $<node>$ = dia_less_equal($<node>1, $<node>3); }
+              | token DIA_LESS token          { $<node>$ = dia_less($<node>1, $<node>3); }
+              ;
+
+dia_bitwise: token DIA_BIT_AND token   { $<node>$ = dia_bit_and($<node>1, $<node>3); }
+           | token DIA_BIT_OR token    { $<node>$ = dia_bit_or($<node>1, $<node>3); }
+           | token DIA_BIT_XOR token   { $<node>$ = dia_bit_xor($<node>1, $<node>3); }
+           |       DIA_BIT_NOT token   { $<node>$ = dia_bit_not($<node>2); }
 
 token: DIA_STRING         { $<node>$ = dia_string($1); }
      | DIA_INTEGER        { $<node>$ = dia_integer($1); }

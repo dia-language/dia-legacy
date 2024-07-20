@@ -17,11 +17,17 @@ extern uint8_t DIA_VERBOSE_LEVEL;
 void yyerror(const char* str);
 %}
 
+%x C_COMMENT
+
 %%
 
 #.+                         { DIA_DEBUG("Comment starts with sharp(#)!\n"); }
 \/\/.+                      { DIA_DEBUG("Comment starts with slashes(//)!\n"); }
-\/\*(.|\n)*\*\/             { DIA_DEBUG("Multi-line comment! (/* ... */)\n"); }
+
+"/*"                        { BEGIN(C_COMMENT); }
+<C_COMMENT>"*/"             { BEGIN(INITIAL); DIA_DEBUG("Multi-line comment! (/* ... */)\n"); }
+<C_COMMENT>\n               { }
+<C_COMMENT>.                { }
 
 0x[0-9a-fA-F]+              { DIA_DEBUG("DIA_HEXADECIMAL: %s\n", yytext);
 
@@ -64,10 +70,37 @@ void yyerror(const char* str);
 
                               return DIA_STRING; }
 
+  /* Calculation Token */
+  /* dia_arithmetic */
 "+"                         { DIA_DEBUG("DIA_PLUS\n"); return DIA_PLUS; }
 "-"                         { DIA_DEBUG("DIA_MINUS\n"); return DIA_MINUS; }
 "*"                         { DIA_DEBUG("DIA_MUL\n"); return DIA_MUL; }
 "/"                         { DIA_DEBUG("DIA_DIV\n"); return DIA_DIV; }
+"%"                         { DIA_DEBUG("DIA_MOD\n"); return DIA_MOD; }
+
+  /* dia_logical */
+"&&"                        { DIA_DEBUG("DIA_LOGICAL_AND"); return DIA_LOGICAL_AND; }
+"and"                       { DIA_DEBUG("DIA_LOGICAL_AND"); return DIA_LOGICAL_AND; }
+"||"                        { DIA_DEBUG("DIA_LOGICAL_OR"); return DIA_LOGICAL_OR; }
+"or"                        { DIA_DEBUG("DIA_LOGICAL_OR"); return DIA_LOGICAL_OR; }
+"!"                         { DIA_DEBUG("DIA_LOGICAL_NOT"); return DIA_LOGICAL_NOT; }
+"not"                       { DIA_DEBUG("DIA_LOGICAL_NOT"); return DIA_LOGICAL_NOT; }
+
+  /* dia_comparison */
+"=="                        { DIA_DEBUG("DIA_EQUAL"); return DIA_EQUAL; }
+">="                        { DIA_DEBUG("DIA_GREATER_EQUAL"); return DIA_GREATER_EQUAL; }
+">"                         { DIA_DEBUG("DIA_GREATER"); return DIA_GREATER; }
+"<="                        { DIA_DEBUG("DIA_LESS_EQUAL"); return DIA_LESS_EQUAL; }
+"<"                         { DIA_DEBUG("DIA_LESS"); return DIA_LESS; }
+
+  /* dia_bitwise */
+"&"                         { DIA_DEBUG("DIA_BIT_AND"); return DIA_BIT_AND; }
+"^"                         { DIA_DEBUG("DIA_BIT_XOR"); return DIA_BIT_XOR; }
+"xor"                       { DIA_DEBUG("DIA_BIT_XOR"); return DIA_BIT_XOR; }
+"|"                         { DIA_DEBUG("DIA_BIT_OR"); return DIA_BIT_OR; }
+"~"                         { DIA_DEBUG("DIA_BIT_NOT"); return DIA_BIT_NOT; }
+
+  /* Calculation Token: End */
 
 ","                         { DIA_DEBUG("DIA_COMMA\n"); return DIA_COMMA; }
 "."                         { DIA_DEBUG("DIA_BIND\n"); return DIA_BIND; }

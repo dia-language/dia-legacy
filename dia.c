@@ -146,7 +146,8 @@ void dia_main(dia_node* node) {
   DIA_DEBUG("Welcome to the Dia World! main function detected!\n");
   DIA_DEBUG("Lemme write down bill of main function...\n");
   DIA_DEBUG("=== Main Function Started ===\n");
-  for (dia_node* _node = $<node>3; _node != NULL; _node = _node->next_function) {
+
+  for (dia_node* _node = node; _node != NULL; _node = _node->next_function) {
     DIA_DEBUG("Main Function\n");
     DIA_DEBUG("- Function name: %s\n", _node->name);
     for (dia_node* _param = _node->next_parameter; _param != NULL; _param = _param->next_parameter)
