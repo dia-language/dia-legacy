@@ -31,6 +31,8 @@ dia_node* dia_string(dia_node* arg);
 dia_node* dia_integer(dia_node* arg);
 dia_node* dia_double(dia_node* arg);
 
+void dia_debug_function_descriptor(dia_node* node);
+
 // Pre-defined functions
 void dia_print(dia_node* node);
 void dia_puts(dia_node* node);

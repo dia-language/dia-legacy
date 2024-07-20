@@ -43,6 +43,19 @@ void dia_free_node (dia_node* node) {
   free(node);
 }
 
+void dia_debug_function_descriptor(dia_node* node) {
+  DIA_DEBUG("=== Function Structure description ===\n");
+  DIA_DEBUG("Function Name: %s\n", node->name);
+
+  // node traversal to generate parameters
+  for (dia_node* _node = node->next_parameter; _node != NULL; _node = _node->next_parameter)
+    DIA_DEBUG("- Parameter: %s\n", _node->name);
+
+  DIA_DEBUG("=== Function Structure description ===\n");
+  return;
+}
+
+
 // Predefined functions
 
 void dia_puts(dia_node* node) {
@@ -81,8 +94,6 @@ void dia_generate_code(dia_node* node) {
   int i=0;
   int size = sizeof(functions) / sizeof(functions[0]);
 
-  printf("size: %d\n", size);
-
   for (; i<size; i++) {
     if(!strcmp(node->name, functions[i].identifier)) {
       functions[i].handler(node);
@@ -95,7 +106,6 @@ void dia_generate_code(dia_node* node) {
 
   return;
 }
-
 
 // The main function
 
@@ -133,6 +143,17 @@ void _dia_comment_generating() {
 }
 
 void dia_main(dia_node* node) {
+  DIA_DEBUG("Welcome to the Dia World! main function detected!\n");
+  DIA_DEBUG("Lemme write down bill of main function...\n");
+  DIA_DEBUG("=== Main Function Started ===\n");
+  for (dia_node* _node = $<node>3; _node != NULL; _node = _node->next_function) {
+    DIA_DEBUG("Main Function\n");
+    DIA_DEBUG("- Function name: %s\n", _node->name);
+    for (dia_node* _param = _node->next_parameter; _param != NULL; _param = _param->next_parameter)
+      DIA_DEBUG("-- param: %s\n", _param->name);
+  }
+  DIA_DEBUG("=== Main Function Concluded ===\n\n");
+
   _dia_comment_generating();
 
   DIA_DEBUG("Generating the main function code...\n");

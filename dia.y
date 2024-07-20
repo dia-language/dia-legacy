@@ -20,7 +20,6 @@ extern void yyerror(const char*);
 
 %code requires {
 #include "dia.h"
-void dia_debug_function_descriptor(dia_node* node);
 }
 
 %union {
@@ -64,70 +63,62 @@ void dia_debug_function_descriptor(dia_node* node);
  *
  */
 
-dia: custom_func dia                       { DIA_DEBUG("Welcome to the Dia World! main function with custom functions detected!\n"); }
-   | DIA_MAIN_FUNC DIA_ALLOC dia_expr      {
-                                              DIA_DEBUG("Welcome to the Dia World! main function detected!\n");
-                                              DIA_DEBUG("Lemme write down bill of main function...\n");
-                                              DIA_DEBUG("=== Main Function Started ===\n");
-                                              for (dia_node* _node = $<node>3; _node != NULL; _node = _node->next_function) {
-                                                DIA_DEBUG("Main Function\n");
-                                                DIA_DEBUG("- Function name: %s\n", _node->name);
-                                                for (dia_node* _param = _node->next_parameter; _param != NULL; _param = _param->next_parameter)
-                                                  DIA_DEBUG("-- param: %s\n", _param->name);
-                                              }
-                                              DIA_DEBUG("=== Main Function Concluded ===\n\n");
-
-                                              dia_main($<node>3);
-                                           }
+dia: custom_func dia                      { DIA_DEBUG("Welcome to the Dia World! main function with custom functions detected!\n"); }
+   | DIA_MAIN_FUNC DIA_ALLOC dia_expr     { dia_main($<node>3); }
    ;
 
 custom_func:
            | DIA_IDENTIFIER DIA_ALLOC dia_expr custom_func   { DIA_DEBUG("Dia: custom function, which name is '%s'\n", $1); }
            ;
 
-dia_expr: dia_expr DIA_BIND dia_expr                 {
-                                                        dia_node* _previous = $<node>1;
-                                                        dia_node* _next = $<node>3;
+dia_expr: dia_expr DIA_BIND dia_expr
+          {
+            dia_node* _previous = $<node>1;
+            dia_node* _next = $<node>3;
 
-                                                        dia_node* _tmp = _next->next_parameter;
-                                                        _next->next_parameter = _previous;
-                                                        _previous->next_parameter = _tmp;
+            dia_node* _tmp = _next->next_parameter;
+            _next->next_parameter = _previous;
+            _previous->next_parameter = _tmp;
 
-                                                        DIA_DEBUG("DIA_BIND: To weave function parameter to the adjacent(next) function.\n");
+            DIA_DEBUG("DIA_BIND: To weave function parameter to the adjacent(next) function.\n");
 
-                                                        dia_debug_function_descriptor(_next);
-                                                        $<node>$ = _next;
-                                                     }
-        | dia_expr DIA_NEXT dia_expr                 {
-                                                        $<node>1->next_function = $<node>3;
-                                                        DIA_DEBUG("Reserved for DIA_NEXT\n");
-                                                        $<node>$ = $<node>1;
-                                                     }
-        | dia_expr DIA_NEXT                          {
-                                                        DIA_DEBUG("Semicolon Terminated\n");
-                                                        $<node>$ = $<node>1;
-                                                     }
+            dia_debug_function_descriptor(_next);
+            $<node>$ = _next;
+          }
+        | dia_expr DIA_NEXT dia_expr
+          {
+            $<node>1->next_function = $<node>3;
+            DIA_DEBUG("Reserved for DIA_NEXT\n");
+            $<node>$ = $<node>1;
+          }
+        | dia_expr DIA_NEXT
+          {
+            DIA_DEBUG("Semicolon Terminated\n");
+            $<node>$ = $<node>1;
+          }
         | dia_function
         ;
 
-dia_function: DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PARENTHESIS    {
-                                                                                            dia_node* _node = (dia_node*)malloc(sizeof(dia_node));
+dia_function: DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PARENTHESIS
+              {
+                dia_node* _node = (dia_node*)malloc(sizeof(dia_node));
 
-                                                                                            _node->name = strdup($1);
-                                                                                            _node->next_parameter = $<node>3;
+                _node->name = strdup($1);
+                _node->next_parameter = $<node>3;
 
-                                                                                            dia_debug_function_descriptor(_node);
+                dia_debug_function_descriptor(_node);
 
-                                                                                            $<node>$ = _node;
-                                                                                          }
-            | DIA_IDENTIFIER                          {
-                                                        dia_node* _node = (dia_node*)malloc(sizeof(dia_node));
-                                                        _node->name = strdup($1);
+                $<node>$ = _node;
+              }
+            | DIA_IDENTIFIER
+              {
+                dia_node* _node = (dia_node*)malloc(sizeof(dia_node));
+                _node->name = strdup($1);
 
-                                                        dia_debug_function_descriptor(_node);
+                dia_debug_function_descriptor(_node);
 
-                                                        $<node>$ = _node;
-                                                      }
+                $<node>$ = _node;
+              }
             | token
             ;
 
@@ -163,18 +154,6 @@ token: DIA_STRING         { $<node>$ = dia_string($1); }
 
 
 %%
-
-void dia_debug_function_descriptor(dia_node* node) {
-  DIA_DEBUG("=== Function Structure description ===\n");
-  DIA_DEBUG("Function Name: %s\n", node->name);
-
-  // node traversal to generate parameters
-  for (dia_node* _node = node->next_parameter; _node != NULL; _node = _node->next_parameter)
-    DIA_DEBUG("- Parameter: %s\n", _node->name);
-
-  DIA_DEBUG("=== Function Structure description ===\n");
-  return;
-}
 
 void yyerror(const char *str) {
   puts("diac: There was an error while parsing the code");
