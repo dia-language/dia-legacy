@@ -33,7 +33,7 @@ void yyerror(const char* str);
 
                               dia_node* node = (dia_node*) malloc(sizeof(dia_node));
                               node->name = strndup(yytext, yyleng);
-                              node->generated_code = strndup(yytext, yyleng);
+                              node->length_of_name = yyleng;
                               node->type = DIA_INTEGER;
 
                               yylval.node = node;
@@ -43,7 +43,7 @@ void yyerror(const char* str);
 
                               dia_node* node = (dia_node*) malloc(sizeof(dia_node));
                               node->name = strndup(yytext, yyleng);
-                              node->generated_code = strndup(yytext, yyleng);
+                              node->length_of_name = yyleng;
                               node->type = DIA_DOUBLE;
 
                               yylval.node = node;
@@ -53,7 +53,7 @@ void yyerror(const char* str);
 
                               dia_node* node = (dia_node*) malloc(sizeof(dia_node));
                               node->name = strndup(yytext, yyleng);
-                              node->generated_code = strndup(yytext, yyleng);
+                              node->length_of_name = yyleng;
                               node->type = DIA_INTEGER;
 
                               yylval.node = node;
@@ -63,7 +63,7 @@ void yyerror(const char* str);
 \"([^\\\"]|\\.)*\"          { DIA_DEBUG("DIA_STRING: %s\n", yytext);
                               dia_node* node = (dia_node*) malloc(sizeof(dia_node));
                               node->name = strndup(yytext, yyleng);
-                              node->generated_code = strndup(yytext, yyleng);
+                              node->length_of_name = yyleng;
                               node->type = DIA_STRING;
 
                               yylval.node = node;

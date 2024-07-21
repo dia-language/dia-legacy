@@ -12,7 +12,7 @@
 extern FILE* yyin;
 extern FILE* yyout;
 
-char DIA_VERSION[] = "dia-2024.07.18.alpha";
+char DIA_VERSION[] = "dia-2024.07.22.alpha";
 char* DIA_CODE_FILE_NAME;
 uint8_t DIA_VERBOSE_LEVEL;
 
@@ -46,8 +46,10 @@ int main(int argc, char** argv) {
   fputs("]\n", stderr);
 
   if (argc == 1) {
-    puts("Dia: Switch to the interactive mode.");
-    puts("This is an example of dia programming language\n");
+    puts("Dia: Switching to the interactive mode.");
+    puts("The interactive mode is intended for debugging purposes.");
+    puts("Press Ctrl+D (^D) to exit and generate C++ code.");
+    puts("This is an example of dia programming language:\n");
     puts("main = \"Hello World!\".puts\n");
   }
 
@@ -70,7 +72,7 @@ int main(int argc, char** argv) {
     {"-v", dia_verbosity},
   };
 
-  for (int i=1; argv[i] != NULL; i++) {
+  for (int i=1; i<argc; i++) {
     for (int j=0; j<sizeof(table)/sizeof(table[0]); j++) {
       if (strstr(argv[i], table[j].option))
         table[j].handler(argv[i]);

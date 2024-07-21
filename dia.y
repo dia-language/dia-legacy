@@ -11,7 +11,6 @@ extern uint8_t DIA_VERBOSE_LEVEL;
 extern char* yytext;
 extern int yylex();
 extern void yyerror(const char*);
-
 %}
 
 /* The lines start with %token will generate .tab.h file
@@ -21,6 +20,8 @@ extern void yyerror(const char*);
 %code requires {
 #include "dia.h"
 #include "dia_calculation.h"
+
+dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
 }
 
 %union {
@@ -93,17 +94,7 @@ custom_func:
 
 dia_expr: dia_expr DIA_BIND dia_expr
           {
-            dia_node* _previous = $<node>1;
-            dia_node* _next = $<node>3;
-
-            dia_node* _tmp = _next->next_parameter;
-            _next->next_parameter = _previous;
-            _previous->next_parameter = _tmp;
-
-            DIA_DEBUG("DIA_BIND: To weave function parameter to the adjacent(next) function.\n");
-
-            dia_debug_function_descriptor(_next);
-            $<node>$ = _next;
+            $<node>$ = dia_bind($<node>1, $<node>3);
           }
         | dia_expr DIA_NEXT dia_expr
           {
@@ -121,21 +112,34 @@ dia_expr: dia_expr DIA_BIND dia_expr
 
 dia_function: DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PARENTHESIS
               {
-                dia_node* _node = (dia_node*)malloc(sizeof(dia_node));
+                dia_node* node = (dia_node*)malloc(sizeof(dia_node));
+                node->name = strdup($1);
 
-                _node->name = strdup($1);
-                _node->next_parameter = $<node>3;
+                // Calculating the size of the parameters
+                for (dia_node* _node = $<node>3; _node != NULL; _node = _node->next_parameter) {
+                  dia_debug_function_descriptor(_node, 0);
+                  ++node->num_of_params;
+                }
 
-                dia_debug_function_descriptor(_node);
+                node->parameters = (dia_node**)malloc(sizeof(dia_node*)*node->num_of_params);
 
-                $<node>$ = _node;
+                // Build up parameters, and clean up next_parameter pointers
+                int i=0;
+                for (dia_node* _node = $<node>3; _node != NULL; i++) {
+                  dia_node* tmp = _node->next_parameter;
+                  _node->next_parameter = NULL;
+                  node->parameters[i] = _node;
+                  _node = tmp;
+                }
+                dia_debug_function_descriptor(node, 0);
+                $<node>$ = node;
               }
             | DIA_IDENTIFIER
               {
                 dia_node* _node = (dia_node*)malloc(sizeof(dia_node));
                 _node->name = strdup($1);
 
-                dia_debug_function_descriptor(_node);
+                dia_debug_function_descriptor(_node, 0);
 
                 $<node>$ = _node;
               }
@@ -153,15 +157,14 @@ dia_else: "else" dia_if
 dia_parameters: dia_function
                 {
                   DIA_DEBUG("+- Function Parameter: %s\n", $<node>1->name);
-
                   $<node>$ = $<node>1;
                 }
               | dia_parameters DIA_COMMA dia_function
                 {
-                  dia_node* __node = $<node>1;
-                  for (; __node->next_parameter != NULL; __node = __node->next_parameter)
-                    DIA_DEBUG("__node->name : %s\n", __node->name);
-                  __node->next_parameter = $<node>3;
+                  dia_node* node = $<node>1;
+                  for (; node->next_parameter != NULL; node = node->next_parameter)
+                    DIA_DEBUG("node->name : %s\n", node->name);
+                  node->next_parameter = $<node>3;
 
                   DIA_DEBUG("+- Function Parameter: %s ... %s\n", $<node>1->name, $<node>3->name);
                   $<node>$ = $<node>1;
@@ -175,37 +178,88 @@ dia_calculation: dia_arithmetic
                | dia_bitwise
                ;
 
-dia_arithmetic: token DIA_PLUS token      { $<node>$ = dia_plus($<node>1, $<node>3); }
-              | token DIA_MINUS token     { $<node>$ = dia_minus($<node>1, $<node>3); }
-              | token DIA_MUL token       { $<node>$ = dia_mul($<node>1, $<node>3); }
-              | token DIA_DIV token       { $<node>$ = dia_div($<node>1, $<node>3); }
-              | token DIA_MOD token       { $<node>$ = dia_mod($<node>1, $<node>3); }
+dia_arithmetic: dia_function DIA_PLUS dia_function
+                {
+                  dia_node* _node = dia_create_node("plus", $<node>1->type);
+                  _node->parameters = (dia_node**)malloc(sizeof(dia_node*)*2);
+                  _node->parameters[0] = $<node>1;
+                  _node->parameters[1] = $<node>3;
+                  _node->num_of_params = 2;
+                  $<node>$ = _node;
+                }
+              | dia_function DIA_MINUS dia_function
+                {
+                  dia_node* _node = dia_create_node("minus", $<node>1->type);
+                  _node->parameters = (dia_node**)malloc(sizeof(dia_node*)*2);
+                  _node->parameters[0] = $<node>1;
+                  _node->parameters[1] = $<node>3;
+                  _node->num_of_params = 2;
+                  $<node>$ = _node;
+                }
+              | dia_function DIA_MUL dia_function
+                {
+                  dia_node* _node = dia_create_node("times", $<node>1->type);
+                  _node->parameters = (dia_node**)malloc(sizeof(dia_node*)*2);
+                  _node->parameters[0] = $<node>1;
+                  _node->parameters[1] = $<node>3;
+                  _node->num_of_params = 2;
+                  $<node>$ = _node;
+               }
+              | dia_function DIA_DIV dia_function
+                {
+                  dia_node* _node = dia_create_node("times", $<node>1->type);
+                  _node->parameters = (dia_node**)malloc(sizeof(dia_node*)*2);
+                  _node->parameters[0] = $<node>1;
+                  _node->parameters[1] = $<node>3;
+                  _node->num_of_params = 2;
+                  $<node>$ = _node;
+                }
+              | dia_function DIA_MOD dia_function
+                {
+                  dia_node* _node = dia_create_node("times", $<node>1->type);
+                  _node->parameters = (dia_node**)malloc(sizeof(dia_node*)*2);
+                  _node->parameters[0] = $<node>1;
+                  _node->parameters[1] = $<node>3;
+                  _node->num_of_params = 2;
+                  $<node>$ = _node;
+                }
               ;
 
-dia_logical: token DIA_LOGICAL_AND token  { $<node>$ = dia_logical_and($<node>1, $<node>3); }
-           | token DIA_LOGICAL_OR token   { $<node>$ = dia_logical_or($<node>1, $<node>3); }
-           |       DIA_LOGICAL_NOT token  { $<node>$ = dia_logical_not($<node>2); }
+dia_logical: dia_function DIA_LOGICAL_AND dia_function  { $<node>$ = dia_logical_and($<node>1, $<node>3); }
+           | dia_function DIA_LOGICAL_OR dia_function   { $<node>$ = dia_logical_or($<node>1, $<node>3); }
+           |              DIA_LOGICAL_NOT dia_function  { $<node>$ = dia_logical_not($<node>2); }
            ;
 
-dia_comparison: token DIA_EQUAL token         { $<node>$ = dia_equal($<node>1, $<node>3); }
-              | token DIA_GREATER_EQUAL token { $<node>$ = dia_greater_equal($<node>1, $<node>3); }
-              | token DIA_GREATER token       { $<node>$ = dia_greater($<node>1, $<node>3); }
-              | token DIA_LESS_EQUAL token    { $<node>$ = dia_less_equal($<node>1, $<node>3); }
-              | token DIA_LESS token          { $<node>$ = dia_less($<node>1, $<node>3); }
+dia_comparison: dia_function DIA_EQUAL dia_function         { $<node>$ = dia_equal($<node>1, $<node>3); }
+              | dia_function DIA_GREATER_EQUAL dia_function { $<node>$ = dia_greater_equal($<node>1, $<node>3); }
+              | dia_function DIA_GREATER dia_function       { $<node>$ = dia_greater($<node>1, $<node>3); }
+              | dia_function DIA_LESS_EQUAL dia_function    { $<node>$ = dia_less_equal($<node>1, $<node>3); }
+              | dia_function DIA_LESS dia_function          { $<node>$ = dia_less($<node>1, $<node>3); }
               ;
 
-dia_bitwise: token DIA_BIT_AND token   { $<node>$ = dia_bit_and($<node>1, $<node>3); }
-           | token DIA_BIT_OR token    { $<node>$ = dia_bit_or($<node>1, $<node>3); }
-           | token DIA_BIT_XOR token   { $<node>$ = dia_bit_xor($<node>1, $<node>3); }
-           |       DIA_BIT_NOT token   { $<node>$ = dia_bit_not($<node>2); }
+dia_bitwise: dia_function DIA_BIT_AND dia_function   { $<node>$ = dia_bit_and($<node>1, $<node>3); }
+           | dia_function DIA_BIT_OR dia_function    { $<node>$ = dia_bit_or($<node>1, $<node>3); }
+           | dia_function DIA_BIT_XOR dia_function   { $<node>$ = dia_bit_xor($<node>1, $<node>3); }
+           |              DIA_BIT_NOT dia_function   { $<node>$ = dia_bit_not($<node>2); }
 
 token: DIA_STRING         { $<node>$ = dia_string($1); }
      | DIA_INTEGER        { $<node>$ = dia_integer($1); }
      | DIA_DOUBLE         { $<node>$ = dia_double($1); }
      ;
 
-
 %%
+
+dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type) {
+  dia_node* node = (dia_node*)malloc(sizeof(dia_node));
+  node->name = strdup(node_name);
+  node->next_parameter = NULL;
+  node->next_function = NULL;
+  node->parameters = NULL;
+  node->num_of_params = 0;
+  node->type = type;
+
+  return node;
+}
 
 void yyerror(const char *str) {
   puts("diac: There was an error while parsing the code");
