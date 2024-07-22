@@ -153,6 +153,11 @@ dia_node* dia_generate_code(dia_node* node) {
     {"times", dia_mul, 2},
     {"divide", dia_div, 2},
     {"modular", dia_mod, 2},
+    /* Logic */
+    {"logical_and", dia_logical_and, 2},
+    {"logical_or", dia_logical_or, 2},
+    {"logical_not", dia_logical_not, 1},
+    /* Comparison */
   };
 
   int i=0;

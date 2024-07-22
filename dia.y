@@ -21,6 +21,17 @@ extern void yyerror(const char*);
 #include "dia.h"
 #include "dia_calculation.h"
 
+dia_node* dia_create_unary_function(
+    char* node_name,
+    DIA_TOKEN_TYPE type,
+    dia_node* a1
+  );
+dia_node* dia_create_binary_function(
+    char* node_name,
+    DIA_TOKEN_TYPE type,
+    dia_node* a1,
+    dia_node* a2
+  );
 dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
 }
 
@@ -180,48 +191,33 @@ dia_calculation: dia_arithmetic
 
 dia_arithmetic: dia_function DIA_PLUS dia_function
                 {
-                  dia_node* _node = dia_create_node("plus", $<node>1->type);
-                  _node->parameters = (dia_node**)malloc(sizeof(dia_node*)*2);
-                  _node->parameters[0] = $<node>1;
-                  _node->parameters[1] = $<node>3;
-                  _node->num_of_params = 2;
-                  $<node>$ = _node;
+                  $<node>$ = dia_create_binary_function(
+                    "plus", $<node>1->type, $<node>1, $<node>3
+                  );
                 }
               | dia_function DIA_MINUS dia_function
                 {
-                  dia_node* _node = dia_create_node("minus", $<node>1->type);
-                  _node->parameters = (dia_node**)malloc(sizeof(dia_node*)*2);
-                  _node->parameters[0] = $<node>1;
-                  _node->parameters[1] = $<node>3;
-                  _node->num_of_params = 2;
-                  $<node>$ = _node;
+                  $<node>$ = dia_create_binary_function(
+                    "minus", $<node>1->type, $<node>1, $<node>3
+                  );
                 }
               | dia_function DIA_MUL dia_function
                 {
-                  dia_node* _node = dia_create_node("times", $<node>1->type);
-                  _node->parameters = (dia_node**)malloc(sizeof(dia_node*)*2);
-                  _node->parameters[0] = $<node>1;
-                  _node->parameters[1] = $<node>3;
-                  _node->num_of_params = 2;
-                  $<node>$ = _node;
+                  $<node>$ = dia_create_binary_function(
+                    "times", $<node>1->type, $<node>1, $<node>3
+                  );
                }
               | dia_function DIA_DIV dia_function
                 {
-                  dia_node* _node = dia_create_node("times", $<node>1->type);
-                  _node->parameters = (dia_node**)malloc(sizeof(dia_node*)*2);
-                  _node->parameters[0] = $<node>1;
-                  _node->parameters[1] = $<node>3;
-                  _node->num_of_params = 2;
-                  $<node>$ = _node;
+                  $<node>$ = dia_create_binary_function(
+                    "divide", $<node>1->type, $<node>1, $<node>3
+                  );
                 }
               | dia_function DIA_MOD dia_function
                 {
-                  dia_node* _node = dia_create_node("times", $<node>1->type);
-                  _node->parameters = (dia_node**)malloc(sizeof(dia_node*)*2);
-                  _node->parameters[0] = $<node>1;
-                  _node->parameters[1] = $<node>3;
-                  _node->num_of_params = 2;
-                  $<node>$ = _node;
+                  $<node>$ = dia_create_binary_function(
+                    "modular", $<node>1->type, $<node>1, $<node>3
+                  );
                 }
               ;
 
@@ -248,6 +244,35 @@ token: DIA_STRING         { $<node>$ = dia_string($1); }
      ;
 
 %%
+
+dia_node* dia_create_unary_function(
+    char* node_name,
+    DIA_TOKEN_TYPE type,
+    dia_node* a1
+  ) {
+  dia_node* _node = dia_create_node(node_name, type);
+  _node->parameters = (dia_node**)malloc(sizeof(dia_node*));
+  _node->parameters[0] = a1;
+  _node->num_of_params = 1;
+
+  return _node;
+
+}
+
+dia_node* dia_create_binary_function(
+    char* node_name,
+    DIA_TOKEN_TYPE type,
+    dia_node* a1,
+    dia_node* a2
+  ) {
+   dia_node* _node = dia_create_node(node_name, type);
+  _node->parameters = (dia_node**)malloc(sizeof(dia_node*)*2);
+  _node->parameters[0] = a1;
+  _node->parameters[1] = a2;
+  _node->num_of_params = 2;
+
+  return _node;
+}
 
 dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type) {
   dia_node* node = (dia_node*)malloc(sizeof(dia_node));

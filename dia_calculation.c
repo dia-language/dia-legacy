@@ -5,6 +5,7 @@ extern void yyerror();
 extern int VARIABLE_INDEX;
 extern FILE* yyout;
 
+/* Arithmetic */
 dia_node* dia_plus(dia_node* node) {
   dia_node* a = node->parameters[0];
   dia_node* b = node->parameters[1];
@@ -53,11 +54,12 @@ dia_node* dia_minus(dia_node* node) {
   dia_node* a = node->parameters[0];
   dia_node* b = node->parameters[1];
 
-  if (a->type == DIA_INTEGER) {
+  if (a->type == DIA_INTEGER && b->type == DIA_INTEGER) {
     fprintf(yyout, "auto v%d = %s-%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_INTEGER);
   }
-  else if (a->type == DIA_DOUBLE) {
+  else if ((a->type == DIA_INTEGER || a->type == DIA_DOUBLE)
+      && (b->type == DIA_INTEGER || b->type == DIA_DOUBLE)) {
     fprintf(yyout, "auto v%d = %s-%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_DOUBLE);
   }
@@ -68,26 +70,87 @@ dia_node* dia_minus(dia_node* node) {
   }
 }
 
-dia_node* dia_mul(dia_node* a) {
-  return NULL;
+dia_node* dia_mul(dia_node* node) {
+  dia_node* a = node->parameters[0];
+  dia_node* b = node->parameters[1];
+
+  if (a->type == DIA_INTEGER && b->type == DIA_INTEGER) {
+    fprintf(yyout, "auto v%d = %s*%s;\n", VARIABLE_INDEX, a->name, b->name);
+    return _dia_create_cpp_variable(DIA_INTEGER);
+  }
+  else if ((a->type == DIA_INTEGER || a->type == DIA_DOUBLE)
+      && (b->type == DIA_INTEGER || b->type == DIA_DOUBLE)) {
+    fprintf(yyout, "auto v%d = %s*%s;\n", VARIABLE_INDEX, a->name, b->name);
+    return _dia_create_cpp_variable(DIA_DOUBLE);
+  }
+  else if (a->type == DIA_STRING && b->type == DIA_INTEGER) {
+    fprintf(yyout, "auto v%d = std::string()", VARIABLE_INDEX);
+    for (int i=0; i<atoi(b->name); i++)
+      fprintf(yyout, "+std::string(%s)", b->name);
+    fprintf(yyout, ";\n");
+    return _dia_create_cpp_variable(DIA_STRING);
+  }
+  else {
+    DIA_DEBUG("dia_mul: Unsupported type parameter: %d, %d\n",
+        a->type, b->type);
+    yyerror("dia_mul: Unsupported parameter type");
+  }
 }
 
-dia_node* dia_div(dia_node* a) {
-  return NULL;
+dia_node* dia_div(dia_node* node) {
+  dia_node* a = node->parameters[0];
+  dia_node* b = node->parameters[1];
+
+  if (atoi(a->name) == 0) {
+    DIA_DEBUG("dia_div: Division by zero\n");
+    yyerror("dia_div: Division by zero");
+  }
+
+  if (a->type == DIA_INTEGER && b->type == DIA_INTEGER) {
+    fprintf(yyout, "auto v%d = %s/%s;\n", VARIABLE_INDEX, a->name, b->name);
+    return _dia_create_cpp_variable(DIA_INTEGER);
+  }
+  else if ((a->type == DIA_INTEGER || a->type == DIA_DOUBLE)
+      && (b->type == DIA_INTEGER || b->type == DIA_DOUBLE)) {
+    fprintf(yyout, "auto v%d = (double)%s/%s;\n",
+        VARIABLE_INDEX, a->name, b->name);
+    return _dia_create_cpp_variable(DIA_DOUBLE);
+  }
+  else {
+    DIA_DEBUG("dia_mul: Unsupported type parameter: %d, %d\n",
+        a->type, b->type);
+    yyerror("dia_mul: Unsupported parameter type");
+  }
 }
 
-dia_node* dia_mod(dia_node* a) {
-  return NULL;
+dia_node* dia_mod(dia_node* node) {
+  dia_node* a = node->parameters[0];
+  dia_node* b = node->parameters[1];
+
+  if (atoi(b->name) == 0) {
+    DIA_DEBUG("dia_div: Division by zero\n");
+    yyerror("dia_div: Division by zero");
+  }
+
+  if (a->type == DIA_INTEGER && b->type == DIA_INTEGER) {
+    fprintf(yyout, "auto v%d = %s%%%s\n", VARIABLE_INDEX, a->name, b->name);
+    return _dia_create_cpp_variable(DIA_INTEGER);
+  }
+  else {
+    DIA_DEBUG("dia_mod: Unsupported type parameter: %d, %d\n",
+        a->type, b->type);
+    yyerror("dia_mod: Unsupported parameter type");
+  }
 }
 
 
-dia_node* dia_logical_and(dia_node* a, dia_node* b) {
+dia_node* dia_logical_and(dia_node* node) {
   return NULL;
 }
-dia_node* dia_logical_or(dia_node* a, dia_node* b) {
+dia_node* dia_logical_or(dia_node* node) {
   return NULL;
 }
-dia_node* dia_logical_not(dia_node* a) {
+dia_node* dia_logical_not(dia_node* node) {
   return NULL;
 }
 
