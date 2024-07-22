@@ -6,14 +6,6 @@ extern int VARIABLE_INDEX;
 extern FILE* yyout;
 
 dia_node* dia_plus(dia_node* node) {
-  if (node->num_of_params != 2) {
-    DIA_DEBUG("dia_plus: Size of parameter should be 2, but %d.\n",
-        node->num_of_params);
-    yyerror("dia_plus: Size of parameter should be 2.");
-  }
-
-  DIA_FUNC_ENTER("dia_plus");
-
   dia_node* a = node->parameters[0];
   dia_node* b = node->parameters[1];
 
@@ -58,14 +50,6 @@ dia_node* dia_plus(dia_node* node) {
 }
 
 dia_node* dia_minus(dia_node* node) {
-  if (node->num_of_params != 2) {
-    DIA_DEBUG("dia_plus: Size of parameter should be 2, but %d.\n",
-        node->num_of_params);
-    yyerror("dia_plus: Size of parameter should be 2.");
-  }
-
-  DIA_FUNC_ENTER("dia_minus");
-
   dia_node* a = node->parameters[0];
   dia_node* b = node->parameters[1];
 

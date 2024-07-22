@@ -141,6 +141,8 @@ dia_node* dia_generate_code(dia_node* node) {
     int num_of_params;
   } dia_predefined_function;
 
+  // If num_of_params is -1, that means it does not need to check
+  // the number of parameters
   dia_predefined_function functions[] = {
     /* Printing */
     {"puts", dia_puts, -1},
@@ -153,13 +155,22 @@ dia_node* dia_generate_code(dia_node* node) {
     {"modular", dia_mod, 2},
   };
 
-
   int i=0;
   int size = sizeof(functions) / sizeof(functions[0]);
-
   for (; i<size; i++) {
-    if(!strcmp(node->name, functions[i].identifier)) {
+    if (!strcmp(node->name, functions[i].identifier)) {
+      if (node->num_of_params != functions[i].num_of_params &&
+          functions[i].num_of_params != -1) {
+        DIA_DEBUG("%s: Size of parameter should be %d, but it's %d.\n",
+            node->name, functions[i].num_of_params, node->num_of_params);
+        yyerror("Type of parameter mismatch.");
+      }
+
+      DIA_DEBUG("%s: Entering the function %s\n",
+          functions[i].identifier, functions[i].identifier);
       node = functions[i].handler(node);
+      DIA_DEBUG("%s: Escaping the function %s\n",
+          functions[i].identifier, functions[i].identifier);
       break;
     }
   }
