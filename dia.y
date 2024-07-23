@@ -323,6 +323,7 @@ token: DIA_STRING         { $<node>$ = dia_string($1); }
      | DIA_INTEGER        { $<node>$ = dia_integer($1); }
      | DIA_DOUBLE         { $<node>$ = dia_double($1); }
      | DIA_BOOL           { $<node>$ = dia_bool($1); }
+     | DIA_OPEN_PARENTHESIS dia_calculation DIA_CLOSE_PARENTHESIS         { $<node>$ = $<node>2; }
      ;
 
 %%
