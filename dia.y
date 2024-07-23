@@ -64,6 +64,7 @@ dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
 %token DIA_LOGICAL_NOT
 
 %token DIA_EQUAL              "=="
+%token DIA_NOT_EQUAL          "!="
 %token DIA_GREATER_EQUAL      ">="
 %token DIA_GREATER            ">"
 %token DIA_LESS_EQUAL         "<="
@@ -239,17 +240,69 @@ dia_logical: dia_function DIA_LOGICAL_AND dia_function
                                           "logical_not", DIA_BOOL, $<node>2); }
            ;
 
-dia_comparison: dia_function DIA_EQUAL dia_function         { $<node>$ = dia_equal($<node>1, $<node>3); }
-              | dia_function DIA_GREATER_EQUAL dia_function { $<node>$ = dia_greater_equal($<node>1, $<node>3); }
-              | dia_function DIA_GREATER dia_function       { $<node>$ = dia_greater($<node>1, $<node>3); }
-              | dia_function DIA_LESS_EQUAL dia_function    { $<node>$ = dia_less_equal($<node>1, $<node>3); }
-              | dia_function DIA_LESS dia_function          { $<node>$ = dia_less($<node>1, $<node>3); }
+dia_comparison: dia_function DIA_EQUAL dia_function
+                {
+                  $<node>$ = dia_create_binary_function(
+                    "equal", DIA_BOOL, $<node>1, $<node>3
+                  );
+                }
+              | dia_function DIA_NOT_EQUAL dia_function
+                {
+                  $<node>$ = dia_create_binary_function(
+                    "not_equal", DIA_BOOL, $<node>1, $<node>3
+                  );
+                }
+              | dia_function DIA_GREATER_EQUAL dia_function
+                {
+                  $<node>$ = dia_create_binary_function(
+                    "greater_equal", DIA_BOOL, $<node>1, $<node>3
+                  );
+                }
+              | dia_function DIA_GREATER dia_function
+                {
+                  $<node>$ = dia_create_binary_function(
+                    "greater", DIA_BOOL, $<node>1, $<node>3
+                  );
+                }
+              | dia_function DIA_LESS_EQUAL dia_function
+                {
+                  $<node>$ = dia_create_binary_function(
+                    "less_equal", DIA_BOOL, $<node>1, $<node>3
+                  );
+                }
+              | dia_function DIA_LESS dia_function
+                {
+                  $<node>$ = dia_create_binary_function(
+                    "less", DIA_BOOL, $<node>1, $<node>3
+                  );
+                }
               ;
 
-dia_bitwise: dia_function DIA_BIT_AND dia_function   { $<node>$ = dia_bit_and($<node>1, $<node>3); }
-           | dia_function DIA_BIT_OR dia_function    { $<node>$ = dia_bit_or($<node>1, $<node>3); }
-           | dia_function DIA_BIT_XOR dia_function   { $<node>$ = dia_bit_xor($<node>1, $<node>3); }
-           |              DIA_BIT_NOT dia_function   { $<node>$ = dia_bit_not($<node>2); }
+dia_bitwise: dia_function DIA_BIT_AND dia_function
+             {
+               $<node>$ = dia_create_binary_function(
+                 "bit_and", DIA_BOOL, $<node>1, $<node>3
+               );
+             }
+           | dia_function DIA_BIT_OR dia_function
+             {
+               $<node>$ = dia_create_binary_function(
+                 "bit_or", DIA_BOOL, $<node>1, $<node>3
+               );
+             }
+           | dia_function DIA_BIT_XOR dia_function
+             {
+               $<node>$ = dia_create_binary_function(
+                 "bit_xor", DIA_BOOL, $<node>1, $<node>3
+               );
+             }
+           | DIA_BIT_NOT dia_function
+             {
+               $<node>$ = dia_create_unary_function(
+                 "bit_not", DIA_BOOL, $<node>2
+               );
+             }
+          ;
 
 token: DIA_STRING         { $<node>$ = dia_string($1); }
      | DIA_INTEGER        { $<node>$ = dia_integer($1); }

@@ -28,17 +28,18 @@ dia_node* dia_mod(dia_node* node);
 dia_node* dia_logical_and(dia_node* node);
 dia_node* dia_logical_or(dia_node* node);
 dia_node* dia_logical_not(dia_node* node);
-
-dia_node* dia_equal(dia_node* a, dia_node* b);
-dia_node* dia_greater_equal(dia_node* a, dia_node* b);
-dia_node* dia_greater(dia_node* a, dia_node* b);
-dia_node* dia_less_equal(dia_node* a, dia_node* b);
-dia_node* dia_less(dia_node* a, dia_node* b);
-
-dia_node* dia_bit_and(dia_node* a, dia_node* b);
-dia_node* dia_bit_or(dia_node* a, dia_node* b);
-dia_node* dia_bit_xor(dia_node* a, dia_node* b);
-dia_node* dia_bit_not(dia_node* a);
+/* Comparison */
+dia_node* dia_equal(dia_node* node);
+dia_node* dia_not_equal(dia_node* node);
+dia_node* dia_greater_equal(dia_node* node);
+dia_node* dia_greater(dia_node* node);
+dia_node* dia_less_equal(dia_node* node);
+dia_node* dia_less(dia_node* node);
+/* Bitwise operation */
+dia_node* dia_bit_and(dia_node* node);
+dia_node* dia_bit_or(dia_node* node);
+dia_node* dia_bit_xor(dia_node* node);
+dia_node* dia_bit_not(dia_node* node);
 
 dia_node* _dia_create_cpp_variable(DIA_TOKEN_TYPE type);
 #endif

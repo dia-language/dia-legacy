@@ -163,6 +163,17 @@ dia_node* dia_generate_code(dia_node* node) {
     {"logical_or", dia_logical_or, 2},
     {"logical_not", dia_logical_not, 1},
     /* Comparison */
+    {"equal", dia_logical_and, 2},
+    {"not_equal", dia_logical_and, 2},
+    {"greater_equal", dia_logical_and, 2},
+    {"greater", dia_logical_and, 2},
+    {"less_equal", dia_logical_and, 2},
+    {"less", dia_logical_and, 2},
+    /* Bitwise operation */
+    {"bit_and", dia_bit_and, 2},
+    {"bit_or", dia_bit_and, 2},
+    {"bit_xor", dia_bit_and, 2},
+    {"bit_not", dia_bit_and, 1},
   };
 
   int i=0;
