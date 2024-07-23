@@ -23,6 +23,11 @@ dia_node* dia_double(dia_node* arg) {
   return arg;
 }
 
+dia_node* dia_bool(dia_node* arg) {
+  DIA_DEBUG("Dia Bool: %s\n", arg->name);
+  return arg;
+}
+
 // Utility
 void dia_free_node (dia_node* node) {
   DIA_DEBUG("This node will be freed: %s\n", node->name);

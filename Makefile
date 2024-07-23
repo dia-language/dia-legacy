@@ -23,5 +23,5 @@ lexer:
 clean_sources:
 	rm lex.yy.c dia.tab.c dia.tab.h *.o
 
-clean: clean_sources
+clean:
 	rm dia_lexer diac

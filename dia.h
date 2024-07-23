@@ -17,6 +17,7 @@
 dia_node* dia_string(dia_node* arg);
 dia_node* dia_integer(dia_node* arg);
 dia_node* dia_double(dia_node* arg);
+dia_node* dia_bool(dia_node* arg);
 
 // Utility functions
 void dia_free_node (dia_node* node);

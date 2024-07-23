@@ -47,6 +47,7 @@ dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
 %token <node> DIA_DOUBLE
 %token <node> DIA_HEXADECIMAL
 %token <node> DIA_STRING
+%token <node> DIA_BOOL
 
 %token DIA_MAIN_FUNC          "main"
 %token DIA_ALLOC              "="
@@ -221,9 +222,21 @@ dia_arithmetic: dia_function DIA_PLUS dia_function
                 }
               ;
 
-dia_logical: dia_function DIA_LOGICAL_AND dia_function  { $<node>$ = dia_logical_and($<node>1, $<node>3); }
-           | dia_function DIA_LOGICAL_OR dia_function   { $<node>$ = dia_logical_or($<node>1, $<node>3); }
-           |              DIA_LOGICAL_NOT dia_function  { $<node>$ = dia_logical_not($<node>2); }
+dia_logical: dia_function DIA_LOGICAL_AND dia_function
+             {
+               $<node>$ = dia_create_binary_function(
+                 "logical_and", DIA_BOOL, $<node>1, $<node>3
+               );
+             }
+           | dia_function DIA_LOGICAL_OR dia_function
+             {
+               $<node>$ = dia_create_binary_function(
+                 "logical_or", DIA_BOOL, $<node>1, $<node>3
+               );
+             }
+           | DIA_LOGICAL_NOT dia_function
+             { $<node>$ = dia_create_unary_function(
+                                          "logical_not", DIA_BOOL, $<node>2); }
            ;
 
 dia_comparison: dia_function DIA_EQUAL dia_function         { $<node>$ = dia_equal($<node>1, $<node>3); }
@@ -241,6 +254,7 @@ dia_bitwise: dia_function DIA_BIT_AND dia_function   { $<node>$ = dia_bit_and($<
 token: DIA_STRING         { $<node>$ = dia_string($1); }
      | DIA_INTEGER        { $<node>$ = dia_integer($1); }
      | DIA_DOUBLE         { $<node>$ = dia_double($1); }
+     | DIA_BOOL           { $<node>$ = dia_bool($1); }
      ;
 
 %%

@@ -24,10 +24,10 @@ dia_node* dia_minus(dia_node* node);
 dia_node* dia_mul(dia_node* node);
 dia_node* dia_div(dia_node* node);
 dia_node* dia_mod(dia_node* node);
-
-dia_node* dia_logical_and(dia_node* a, dia_node* b);
-dia_node* dia_logical_or(dia_node* a, dia_node* b);
-dia_node* dia_logical_not(dia_node* a);
+/* Logic */
+dia_node* dia_logical_and(dia_node* node);
+dia_node* dia_logical_or(dia_node* node);
+dia_node* dia_logical_not(dia_node* node);
 
 dia_node* dia_equal(dia_node* a, dia_node* b);
 dia_node* dia_greater_equal(dia_node* a, dia_node* b);

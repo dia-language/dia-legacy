@@ -70,6 +70,25 @@ void yyerror(const char* str);
 
                               return DIA_STRING; }
 
+(T|t)rue                    { DIA_DEBUG("DIA_BOOL: %s\n", yytext);
+                              dia_node* node = (dia_node*)malloc(sizeof(dia_node));
+                              node->name = strdup("true");
+                              node->type = DIA_BOOL;
+
+                              yylval.node = node;
+
+                              return DIA_BOOL; }
+
+(F|f)alse                   { DIA_DEBUG("DIA_BOOL: %s\n", yytext);
+                              dia_node* node = (dia_node*)malloc(sizeof(dia_node));
+                              node->name = strdup("false");
+                              node->type = DIA_BOOL;
+
+                              yylval.node = node;
+
+                              return DIA_BOOL; }
+
+
   /* Calculation Token */
   /* dia_arithmetic */
 "+"                         { DIA_DEBUG("DIA_PLUS\n"); return DIA_PLUS; }
@@ -79,12 +98,12 @@ void yyerror(const char* str);
 "%"                         { DIA_DEBUG("DIA_MOD\n"); return DIA_MOD; }
 
   /* dia_logical */
-"&&"                        { DIA_DEBUG("DIA_LOGICAL_AND"); return DIA_LOGICAL_AND; }
-"and"                       { DIA_DEBUG("DIA_LOGICAL_AND"); return DIA_LOGICAL_AND; }
-"||"                        { DIA_DEBUG("DIA_LOGICAL_OR"); return DIA_LOGICAL_OR; }
-"or"                        { DIA_DEBUG("DIA_LOGICAL_OR"); return DIA_LOGICAL_OR; }
-"!"                         { DIA_DEBUG("DIA_LOGICAL_NOT"); return DIA_LOGICAL_NOT; }
-"not"                       { DIA_DEBUG("DIA_LOGICAL_NOT"); return DIA_LOGICAL_NOT; }
+"&&"                        { DIA_DEBUG("DIA_LOGICAL_AND\n"); return DIA_LOGICAL_AND; }
+"and"                       { DIA_DEBUG("DIA_LOGICAL_AND\n"); return DIA_LOGICAL_AND; }
+"||"                        { DIA_DEBUG("DIA_LOGICAL_OR\n"); return DIA_LOGICAL_OR; }
+"or"                        { DIA_DEBUG("DIA_LOGICAL_OR\n"); return DIA_LOGICAL_OR; }
+"!"                         { DIA_DEBUG("DIA_LOGICAL_NOT\n"); return DIA_LOGICAL_NOT; }
+"not"                       { DIA_DEBUG("DIA_LOGICAL_NOT\n"); return DIA_LOGICAL_NOT; }
 
   /* dia_comparison */
 "=="                        { DIA_DEBUG("DIA_EQUAL"); return DIA_EQUAL; }
