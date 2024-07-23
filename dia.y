@@ -86,6 +86,21 @@ dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
 %token DIA_OPEN_BRACKET       "["
 %token DIA_CLOSE_BRACKET      "]"
 
+/* Precedence */
+/* Reference: https://en.cppreference.com/w/c/language/operator_precedence */
+%left DIA_LOGICAL_OR
+%left DIA_LOGICAL_AND
+
+%left DIA_BIT_OR
+%left DIA_BIT_XOR
+%left DIA_BIT_AND
+
+%left DIA_EQUAL DIA_NOT_EQUAL
+%left DIA_GREATER_EQUAL DIA_GREATER DIA_LESS_EQUAL DIA_LESS
+
+%left DIA_PLUS DIA_MINUS
+%left DIA_MUL DIA_DIV DIA_MOD
+
 %token <str> DIA_IDENTIFIER
 
 %%
