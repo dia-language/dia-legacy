@@ -49,7 +49,7 @@ void yyerror(const char* str);
                               yylval.node = node;
                               return DIA_DOUBLE; }
 
-[[1-9][0-9]*|0]             { DIA_DEBUG("DIA_INTEGER: %s\n", yytext);
+[1-9][0-9]*|0               { DIA_DEBUG("DIA_INTEGER: %s\n", yytext);
 
                               dia_node* node = (dia_node*) malloc(sizeof(dia_node));
                               node->name = strndup(yytext, yyleng);

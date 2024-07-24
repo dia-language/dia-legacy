@@ -48,6 +48,7 @@ dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
 %token <node> DIA_HEXADECIMAL
 %token <node> DIA_STRING
 %token <node> DIA_BOOL
+%token <node> DIA_VECTOR
 
 %token DIA_MAIN_FUNC          "main"
 %token DIA_ALLOC              "="
@@ -324,6 +325,41 @@ token: DIA_STRING         { $<node>$ = dia_string($1); }
      | DIA_DOUBLE         { $<node>$ = dia_double($1); }
      | DIA_BOOL           { $<node>$ = dia_bool($1); }
      | DIA_OPEN_PARENTHESIS dia_calculation DIA_CLOSE_PARENTHESIS         { $<node>$ = $<node>2; }
+     | DIA_OPEN_BRACKET dia_parameters DIA_CLOSE_BRACKET
+       {
+         dia_node* vec = (dia_node*)malloc(sizeof(dia_node));
+         vec->num_of_params = 0;
+         vec->name = strdup("vector");
+         vec->next_function = NULL;
+         vec->parameters = NULL;
+         vec->type = DIA_VECTOR;
+
+         DIA_TOKEN_TYPE type_of_first_element = 0;
+         if ($<node>2->next_parameter != NULL)
+           type_of_first_element = $<node>2->next_parameter->type;
+
+         for (dia_node* _node = $<node>2; _node != NULL; _node = _node->next_parameter) {
+           if (type_of_first_element != _node->type) {
+             DIA_DEBUG("dia_vector: Type mismatch\n");
+             DIA_DEBUG("dia_vector: vec[0]: %d\n", type_of_first_element);
+             DIA_DEBUG("dia_vector: vec[%d]: %d\n", vec->num_of_params, vec->type);
+           }
+           vec->num_of_params++;
+         }
+
+         int i = 0;
+         dia_node** params = (dia_node**)malloc(sizeof(dia_node*)*vec->num_of_params);
+         for (dia_node* _node = $<node>2; _node != NULL; i++) {
+           dia_node* tmp = _node->next_parameter;
+           _node->next_parameter == NULL;
+           params[i] = _node;
+           _node = tmp;
+         }
+
+         vec->parameters = params;
+         dia_debug_function_descriptor(vec, 0);
+         $<node>$ = vec;
+       }
      ;
 
 %%
