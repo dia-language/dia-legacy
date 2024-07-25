@@ -1,20 +1,27 @@
 CC=gcc
 MAKE=make
 
-compiler:
-	bison -d dia.y
-	flex dia.l
-	$(CC) -c dia.c -o dia.o
-	$(CC) -c dia_calculation.c -o dia_calculation.o
-	$(CC) -o diac main.c dia.o dia_calculation.o dia.tab.c lex.yy.c -lfl
+compiler: dia_calculation.o dia_vector.o dia.o
+	$(CC) -o diac main.c dia.o dia_calculation.o dia_vector.o dia.tab.c lex.yy.c -lfl
 	$(MAKE) clean_sources
 
-static:
+static: dia_calculation.o dia_vector.o dia.o
+	$(CC) -static diac main.c dia.o dia_calculation.o dia_vector.o dia.tab.c lex.yy.c -lfl
+	$(MAKE) clean_sources
+
+bison_flex:
 	bison -d dia.y
 	flex dia.l
+
+dia_calculation.o: bison_flex
+	$(CC) -c dia_calculation.c -o dia_calculation.o
+
+dia_vector.o: bison_flex
+	$(CC) -c dia_vector.c -o dia_vector.o
+
+dia.o: bison_flex
 	$(CC) -c dia.c -o dia.o
-	$(CC) -static -o diac main.c dia.o dia.tab.c lex.yy.c -lfl
-	$(MAKE) clean_sources
+
 
 lexer:
 	flex dia.l

@@ -139,6 +139,13 @@ dia_expr: dia_expr DIA_BIND dia_expr
         | dia_function
         ;
 
+dia_if: "if" DIA_OPEN_PARENTHESIS dia_expr DIA_CLOSE_PARENTHESIS dia_else
+      ;
+
+dia_else: "else" dia_if
+        | "else" DIA_OPEN_PARENTHESIS dia_expr DIA_CLOSE_PARENTHESIS
+        ;
+
 dia_function: DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PARENTHESIS
               {
                 dia_node* node = (dia_node*)malloc(sizeof(dia_node));
@@ -175,13 +182,6 @@ dia_function: DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PAREN
             | dia_calculation
             | token
             ;
-
-dia_if: "if" DIA_OPEN_PARENTHESIS dia_expr DIA_CLOSE_PARENTHESIS dia_else
-      ;
-
-dia_else: "else" dia_if
-        | "else" DIA_OPEN_PARENTHESIS dia_expr DIA_CLOSE_PARENTHESIS
-        ;
 
 dia_parameters: dia_function
                 {

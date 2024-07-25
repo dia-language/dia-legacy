@@ -29,6 +29,22 @@ dia_node* dia_bool(dia_node* arg) {
 }
 
 // Utility
+char* dia_token_type_to_string(DIA_TOKEN_TYPE type) {
+  switch(type) {
+    case DIA_INTEGER:
+      return "int";
+    case DIA_DOUBLE:
+      return "double";
+    case DIA_STRING:
+      return "std::string";
+    case DIA_BOOL:
+      return "bool";
+    default:
+      DIA_DEBUG("dia_token_type_to_string: Unknown Type: %d\n", type);
+      yyerror("Unknown Type.");
+  }
+}
+
 void dia_free_node (dia_node* node) {
   DIA_DEBUG("This node will be freed: %s\n", node->name);
 
@@ -174,6 +190,8 @@ dia_node* dia_generate_code(dia_node* node) {
     {"bit_or", dia_bit_and, 2},
     {"bit_xor", dia_bit_and, 2},
     {"bit_not", dia_bit_and, 1},
+    /* Vector */
+    {"vector", dia_vector, -1},
   };
 
   int i=0;
