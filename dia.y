@@ -33,6 +33,11 @@ dia_node* dia_create_binary_function(
     dia_node* a2
   );
 dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
+
+typedef struct _custom_function_t {
+    dia_node* node;
+    struct _custom_function_t* next;
+  } custom_function_t;
 }
 
 %union {
@@ -41,6 +46,7 @@ dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
   char* str;
 
   dia_node* node;
+  custom_function_t* func;
 }
 
 %token <node> DIA_INTEGER
@@ -113,12 +119,39 @@ dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
  *
  */
 
-dia: custom_func dia                      { DIA_DEBUG("Welcome to the Dia World! main function with custom functions detected!\n"); }
-   | DIA_MAIN_FUNC DIA_ALLOC dia_expr     { dia_main($<node>3); }
+dia: custom_func dia
+     {
+       DIA_DEBUG("Welcome to the Dia World! main function with custom functions detected!\n");
+
+       for (custom_function_t* _func = $<func>1; _func != NULL; _func = _func->next) {
+         char* _name = _func->node->name;
+         DIA_DEBUG("It is going to generate code for the function %s...\n", _name);
+         dia_custom_function(_func->node);
+         DIA_DEBUG("I'm expecting that code generation for the %s is done...!\n", _name);
+         printf("_func %p, _func->next %p\n", _func, _func->next);
+       }
+
+       DIA_DEBUG("Let's go to the final job, (except for the cleanup)\n");
+       dia_main($<node>2);
+     }
+   | DIA_MAIN_FUNC DIA_ALLOC dia_expr     { $<node>$ = $<node>3; }
    ;
 
-custom_func:
-           | DIA_IDENTIFIER DIA_ALLOC dia_expr custom_func   { DIA_DEBUG("Dia: custom function, which name is '%s'\n", $1); }
+custom_func: /* If the custom_func reaches to the end, or the custom_func does not exist */ { $<node>$ = NULL; }
+           | DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PARENTHESIS DIA_ALLOC dia_expr custom_func
+           | DIA_IDENTIFIER DIA_ALLOC dia_expr custom_func
+             {
+               DIA_DEBUG("Dia: custom function, which name is '%s'\n", $1);
+               custom_function_t* _func = (custom_function_t*)malloc(sizeof(custom_function_t));
+               _func->next = $<func>4;
+
+               dia_node* _node = (dia_node*)malloc(sizeof(dia_node));
+               _node->name = strdup($1);
+               _node->next_function = $<node>3;
+
+               _func->node = _node;
+               $<func>$ = _func;
+             }
            ;
 
 dia_expr: dia_expr DIA_BIND dia_expr

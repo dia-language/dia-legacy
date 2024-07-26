@@ -32,6 +32,7 @@ dia_node* dia_puts(dia_node* node);
 
 dia_node* dia_generate_code(dia_node* node);
 
+void dia_custom_function(dia_node* node);
 void dia_main(dia_node* node);
 
 #endif

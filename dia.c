@@ -42,6 +42,7 @@ char* dia_token_type_to_string(DIA_TOKEN_TYPE type) {
     default:
       DIA_DEBUG("dia_token_type_to_string: Unknown Type: %d\n", type);
       yyerror("Unknown Type.");
+      return "void";
   }
 }
 
@@ -145,7 +146,7 @@ dia_node* dia_print(dia_node* node) {
 // Generate function
 dia_node* dia_generate_code(dia_node* node) {
   if (node == NULL) {
-    DIA_DEBUG("dia_plus: the node parameter is NULL\n");
+    DIA_DEBUG("dia_generate_code: the node parameter is NULL\n");
     return NULL;
   }
 
@@ -257,6 +258,21 @@ void _dia_comment_generating() {
   fputs(" */\n", yyout);
 }
 
+void dia_custom_function(dia_node* node) {
+  DIA_DEBUG("=== Function %s Started ===\n", node->name);
+  VARIABLE_INDEX = 0;
+
+  for (dia_node* _node = node->next_function; _node != NULL; _node = _node->next_function)
+    dia_debug_function_descriptor(_node, 0);
+
+  fprintf(yyout, "%s %s() {\n", dia_token_type_to_string(node->type), node->name);
+  for (dia_node* _node = node->next_function; _node != NULL; _node = _node->next_function)
+    dia_generate_code(_node);
+
+  fputs("}\n", yyout);
+  dia_free_node(node);
+}
+
 void dia_main(dia_node* node) {
   DIA_DEBUG("Welcome to the Dia World! main function detected!\n");
   DIA_DEBUG("Lemme write down bill of main function...\n");
@@ -282,6 +298,5 @@ void dia_main(dia_node* node) {
     dia_generate_code(_node);
 
   fputs("}", yyout);
-  puts("");
   dia_free_node(node);
 }
