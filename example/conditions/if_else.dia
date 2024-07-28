@@ -1,0 +1,1 @@
+main = if (True == True) puts("True") else if (true == false) puts("false") else puts("true");

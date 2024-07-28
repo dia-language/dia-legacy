@@ -30,6 +30,7 @@ void dia_debug_function_descriptor(dia_node* node, int depth);
 dia_node* dia_print(dia_node* node);
 dia_node* dia_puts(dia_node* node);
 
+void _dia_comment_generating();
 dia_node* dia_generate_code(dia_node* node);
 
 void dia_custom_function(dia_node* node);

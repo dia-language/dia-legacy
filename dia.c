@@ -145,11 +145,39 @@ dia_node* dia_print(dia_node* node) {
   return NULL;
 }
 
+dia_node* dia_if(dia_node* node) {
+  if (node->num_of_params != 3)
+    yyerror("If clause does not have three parameters.");
+
+  DIA_DEBUG("dia_if: Code generating of if-else clause\n");
+  if (node->parameters[0]->parameters)
+    dia_generate_code(node->parameters[0]);
+
+  fprintf(yyout, "if(%s) {\n", dia_generate_code(node->parameters[1])->name);
+  //fprintf(yyout, "if(%s) {\n", node->parameters[0]->name);
+  //dia_generate_code(node->parameters[1]);
+  fputs("}", yyout);
+  if (!strcmp(node->parameters[2]->name, "if")) {
+    fputs(" else ", yyout);
+    dia_generate_code(node->parameters[2]);
+  }
+  else {
+    fputs(" else {", yyout);
+    dia_generate_code(node->parameters[2]);
+  }
+
+  return node;
+}
 
 // Generate function
 dia_node* dia_generate_code(dia_node* node) {
   if (node == NULL) {
     DIA_DEBUG("dia_generate_code: the node parameter is NULL\n");
+    return NULL;
+  }
+
+  if (!strcmp(node->name, "if")) {
+    dia_if(node);
     return NULL;
   }
 
@@ -189,6 +217,7 @@ dia_node* dia_generate_code(dia_node* node) {
     /* Printing */
     {"puts", dia_puts, -1},
     {"print", dia_print, -1},
+    {"if", dia_if, 3},
     /* Arithmetic */
     {"plus", dia_plus, 2},
     {"minus", dia_minus, 2},
@@ -307,11 +336,6 @@ void dia_main(dia_node* node) {
     dia_debug_function_descriptor(_node, 0);
 
   DIA_DEBUG("=== Main Function Concluded ===\n\n");
-
-  // DIA_CODE_FILE_NAME is NULL when the diac runs in interactive mode
-  if (DIA_CODE_FILE_NAME != NULL)
-    _dia_comment_generating();
-
   DIA_DEBUG("Generating the main function code...\n");
 
   fputs("#include<iostream>\n", yyout);

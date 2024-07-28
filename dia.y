@@ -11,6 +11,7 @@ extern uint8_t DIA_VERBOSE_LEVEL;
 extern char* yytext;
 extern int yylex();
 extern void yyerror(const char*);
+extern char* DIA_CODE_FILE_NAME;
 
 struct _custom_function_t* custom_functions;
 %}
@@ -94,6 +95,9 @@ dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
 %token DIA_OPEN_BRACKET       "["
 %token DIA_CLOSE_BRACKET      "]"
 
+%token DIA_IF                 "if"
+%token DIA_ELSE               "else"
+
 /* Precedence */
 /* Reference: https://en.cppreference.com/w/c/language/operator_precedence */
 %left DIA_LOGICAL_OR
@@ -120,7 +124,18 @@ dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
  *
  */
 
-dia: custom_func dia
+dia: DIA_MAIN_FUNC DIA_ALLOC dia_expr
+     {
+       // DIA_CODE_FILE_NAME is NULL when the diac runs in interactive mode
+       if (DIA_CODE_FILE_NAME != NULL)
+         _dia_comment_generating();
+
+       if (custom_functions)
+         $<node>$ = $<node>3;
+       else
+         dia_main($<node>3);
+     }
+   | custom_func dia
      {
        DIA_DEBUG("Welcome to the Dia World! main function with custom functions detected!\n");
        custom_functions = $<func>1;
@@ -139,7 +154,6 @@ dia: custom_func dia
        DIA_DEBUG("Let's go to the final job, (except for the cleanup)\n");
        dia_main($<node>2);
      }
-   | DIA_MAIN_FUNC DIA_ALLOC dia_expr     { $<node>$ = $<node>3; }
    ;
 
 custom_func: /* If the custom_func reaches to the end, or the custom_func does not exist */ { $<func>$ = NULL; }
@@ -182,13 +196,30 @@ dia_expr: dia_expr DIA_BIND dia_expr
             $<node>$ = $<node>1;
           }
         | dia_function
+        | dia_if
         ;
 
-dia_if: "if" DIA_OPEN_PARENTHESIS dia_expr DIA_CLOSE_PARENTHESIS dia_else
+dia_if: DIA_IF DIA_OPEN_PARENTHESIS dia_function DIA_CLOSE_PARENTHESIS dia_expr dia_else
+        {
+          DIA_DEBUG("dia_if: If-else detected.\n");
+          if ($<node>3->type != DIA_BOOL)
+            yyerror("The expression inside the if component should return Bool type.");
+
+          dia_node* node = (dia_node*)malloc(sizeof(dia_node));
+          node->name = strdup("if");
+          node->num_of_params = 3;
+          node->parameters = (dia_node**)malloc(sizeof(dia_node*)*3);
+          node->parameters[0] = $<node>3;
+          node->parameters[1] = $<node>5;
+          node->parameters[2] = $<node>6;
+
+          dia_debug_function_descriptor(node, 0);
+          $<node>$ = node;
+        }
       ;
 
-dia_else: "else" dia_if
-        | "else" DIA_OPEN_PARENTHESIS dia_expr DIA_CLOSE_PARENTHESIS
+dia_else: DIA_ELSE dia_if { $<node>$ = $<node>2; }
+        | DIA_ELSE dia_function { $<node>$ = $<node>2; }
         ;
 
 dia_function: DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PARENTHESIS
