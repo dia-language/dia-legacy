@@ -1,0 +1,4 @@
+hello = 24*48
+world = 2288 - 228
+
+main = hello + world

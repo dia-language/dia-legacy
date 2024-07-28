@@ -5,6 +5,7 @@ extern char DIA_VERSION[];
 extern char* DIA_CODE_FILE_NAME;
 extern FILE* yyout;
 extern void yyerror();
+extern custom_function_t* custom_functions;
 
 int VARIABLE_INDEX;
 
@@ -39,10 +40,11 @@ char* dia_token_type_to_string(DIA_TOKEN_TYPE type) {
       return "std::string";
     case DIA_BOOL:
       return "bool";
+    case 0:
+      return "void";
     default:
       DIA_DEBUG("dia_token_type_to_string: Unknown Type: %d\n", type);
       yyerror("Unknown Type.");
-      return "void";
   }
 }
 
@@ -100,6 +102,7 @@ dia_node* dia_bind(dia_node* prev, dia_node* next) {
 void dia_debug_function_descriptor(dia_node* node, int depth) {
   DIA_DEBUG("=== Function Structure description ===\n");
   DIA_DEBUG("Depth: %d\n", depth);
+  DIA_DEBUG("Type: %s\n", dia_token_type_to_string(node->type));
   DIA_DEBUG("Function Name: %s\n", node->name);
 
   // node traversal to generate parameters
@@ -150,8 +153,25 @@ dia_node* dia_generate_code(dia_node* node) {
     return NULL;
   }
 
+  custom_function_t* _func = custom_functions;
+  for(; _func; _func = _func->next) {
+    if (!strcmp(node->name, _func->node->name)) {
+      DIA_DEBUG("dia_generate_code: %s was the custom function.\n", _func->node->name);
+      //if (!_func->node->type /* if return type is void */)
+        fprintf(yyout, "%s()", node->name);
+        break;
+    }
+  }
+
   for (int i=0; i<node->num_of_params; i++) {
     if (node->parameters[i]->name != NULL) {
+      for (custom_function_t* _function = custom_functions; _function; _function = _function->next) {
+        if (!strcmp(_function->node->name, node->parameters[i]->name)) {
+          node->parameters[i]->type = _function->node->type;
+          break;
+        }
+      }
+
       if (node->parameters[i]->parameters != NULL)
         node->parameters[i] = dia_generate_code(node->parameters[i]);
     }
@@ -211,11 +231,13 @@ dia_node* dia_generate_code(dia_node* node) {
       node = functions[i].handler(node);
       DIA_DEBUG("%s: Escaping the function %s\n",
           functions[i].identifier, functions[i].identifier);
-      break;
+      return node;
     }
   }
 
-  if (i == size) {
+  DIA_DEBUG("dia_generate_code: Perhaps it is in the list of parameters.\n");
+
+  if (_func == NULL) {
     fprintf(stderr, "Undefined method: %s\n", node->name);
     yyerror("Undefined method.");
   }
@@ -262,15 +284,18 @@ void dia_custom_function(dia_node* node) {
   DIA_DEBUG("=== Function %s Started ===\n", node->name);
   VARIABLE_INDEX = 0;
 
-  for (dia_node* _node = node->next_function; _node != NULL; _node = _node->next_function)
+  DIA_TOKEN_TYPE return_type = 0;
+  for (dia_node* _node = node->next_function; _node != NULL; _node = _node->next_function) {
     dia_debug_function_descriptor(_node, 0);
+    return_type = _node->type;
+  }
 
-  fprintf(yyout, "%s %s() {\n", dia_token_type_to_string(node->type), node->name);
+  fprintf(yyout, "%s %s() {\n", dia_token_type_to_string(return_type), node->name);
   for (dia_node* _node = node->next_function; _node != NULL; _node = _node->next_function)
     dia_generate_code(_node);
 
+  fprintf(yyout, "return v%d;\n", --VARIABLE_INDEX);
   fputs("}\n", yyout);
-  dia_free_node(node);
 }
 
 void dia_main(dia_node* node) {

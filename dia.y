@@ -11,6 +11,8 @@ extern uint8_t DIA_VERBOSE_LEVEL;
 extern char* yytext;
 extern int yylex();
 extern void yyerror(const char*);
+
+struct _custom_function_t* custom_functions;
 %}
 
 /* The lines start with %token will generate .tab.h file
@@ -32,12 +34,11 @@ dia_node* dia_create_binary_function(
     dia_node* a1,
     dia_node* a2
   );
-dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
-
 typedef struct _custom_function_t {
     dia_node* node;
     struct _custom_function_t* next;
   } custom_function_t;
+dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
 }
 
 %union {
@@ -122,13 +123,17 @@ typedef struct _custom_function_t {
 dia: custom_func dia
      {
        DIA_DEBUG("Welcome to the Dia World! main function with custom functions detected!\n");
+       custom_functions = $<func>1;
+
+       for (custom_function_t* _func = $<func>1; _func != NULL; _func = _func->next) {
+         dia_debug_function_descriptor(_func->node, 0);
+       }
 
        for (custom_function_t* _func = $<func>1; _func != NULL; _func = _func->next) {
          char* _name = _func->node->name;
          DIA_DEBUG("It is going to generate code for the function %s...\n", _name);
          dia_custom_function(_func->node);
-         DIA_DEBUG("I'm expecting that code generation for the %s is done...!\n", _name);
-         printf("_func %p, _func->next %p\n", _func, _func->next);
+         DIA_DEBUG("I'm expecting that code generation for the custom function is done...!\n");
        }
 
        DIA_DEBUG("Let's go to the final job, (except for the cleanup)\n");
@@ -137,20 +142,27 @@ dia: custom_func dia
    | DIA_MAIN_FUNC DIA_ALLOC dia_expr     { $<node>$ = $<node>3; }
    ;
 
-custom_func: /* If the custom_func reaches to the end, or the custom_func does not exist */ { $<node>$ = NULL; }
+custom_func: /* If the custom_func reaches to the end, or the custom_func does not exist */ { $<func>$ = NULL; }
            | DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PARENTHESIS DIA_ALLOC dia_expr custom_func
            | DIA_IDENTIFIER DIA_ALLOC dia_expr custom_func
              {
                DIA_DEBUG("Dia: custom function, which name is '%s'\n", $1);
-               custom_function_t* _func = (custom_function_t*)malloc(sizeof(custom_function_t));
-               _func->next = $<func>4;
+               custom_function_t* func = (custom_function_t*)malloc(sizeof(custom_function_t));
+               func->next = $<func>4;
 
-               dia_node* _node = (dia_node*)malloc(sizeof(dia_node));
-               _node->name = strdup($1);
-               _node->next_function = $<node>3;
+               dia_node* node = (dia_node*)malloc(sizeof(dia_node));
+               node->name = strdup($1);
+               node->next_function = $<node>3;
 
-               _func->node = _node;
-               $<func>$ = _func;
+               DIA_TOKEN_TYPE return_type = 0;
+               for (dia_node* _node = node->next_function; _node != NULL; _node = _node->next_function) {
+                 dia_debug_function_descriptor(_node, 0);
+                 return_type = _node->type;
+               }
+               node->type = return_type;
+
+               func->node = node;
+               $<func>$ = func;
              }
            ;
 
@@ -408,7 +420,6 @@ dia_node* dia_create_unary_function(
   _node->num_of_params = 1;
 
   return _node;
-
 }
 
 dia_node* dia_create_binary_function(
