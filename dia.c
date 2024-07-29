@@ -100,7 +100,7 @@ dia_node* dia_bind(dia_node* prev, dia_node* next) {
 }
 
 void dia_debug_function_descriptor(dia_node* node, int depth) {
-  DIA_DEBUG("=== Function Structure description ===\n");
+  DIA_DEBUG("=== Function Structure description Started ===\n");
   DIA_DEBUG("Depth: %d\n", depth);
   DIA_DEBUG("Type: %s\n", dia_token_type_to_string(node->type));
   DIA_DEBUG("Function Name: %s\n", node->name);
@@ -112,7 +112,7 @@ void dia_debug_function_descriptor(dia_node* node, int depth) {
       dia_debug_function_descriptor(node->parameters[i], ++depth);
   }
 
-  DIA_DEBUG("=== Function Structure description ===\n");
+  DIA_DEBUG("=== Function Structure description Concluded ===\n\n");
   return;
 }
 
@@ -185,9 +185,8 @@ dia_node* dia_generate_code(dia_node* node) {
   for(; _func; _func = _func->next) {
     if (!strcmp(node->name, _func->node->name)) {
       DIA_DEBUG("dia_generate_code: %s was the custom function.\n", _func->node->name);
-      //if (!_func->node->type /* if return type is void */)
-        fprintf(yyout, "%s()", node->name);
-        break;
+      fprintf(yyout, "%s()", node->name);
+      break;
     }
   }
 
@@ -313,22 +312,34 @@ void dia_custom_function(dia_node* node) {
   DIA_DEBUG("=== Function %s Started ===\n", node->name);
   VARIABLE_INDEX = 0;
 
-  DIA_TOKEN_TYPE return_type = 0;
-  for (dia_node* _node = node->next_function; _node != NULL; _node = _node->next_function) {
-    dia_debug_function_descriptor(_node, 0);
-    return_type = _node->type;
+  //fprintf(yyout, "%s %s() {\n", dia_token_type_to_string(return_type), node->name);
+  fprintf(yyout, "%s %s() {\n", dia_token_type_to_string(node->type), node->name);
+
+  // To see the function is a constant function
+  // enjoy = "Enjoy!"
+  DIA_TOKEN_TYPE _type = node->next_function->type;
+  char _first = node->next_function->name[0];
+
+  if ((_type == DIA_INTEGER && (_first >= '0' && _first <= '9')) ||
+   (_type == DIA_DOUBLE && (_first >= '0' && _first <= '9')) ||
+   (_type == DIA_STRING && _first == '"')) {
+    fprintf(yyout, "auto v%d = %s;\n", VARIABLE_INDEX, node->next_function->name);
+    ++VARIABLE_INDEX;
+  }
+  else {
+    for (dia_node* _node = node->next_function; _node; _node = _node->next_function) {
+      dia_generate_code(_node);
+      fputs(";\n", yyout);
+    }
   }
 
-  fprintf(yyout, "%s %s() {\n", dia_token_type_to_string(return_type), node->name);
-  for (dia_node* _node = node->next_function; _node != NULL; _node = _node->next_function)
-    dia_generate_code(_node);
-
-  fprintf(yyout, "return v%d;\n", --VARIABLE_INDEX);
+  //if (return_type != 0 /* void */)
+  if (node->type != 0 /* void */)
+    fprintf(yyout, "return v%d;\n", --VARIABLE_INDEX);
   fputs("}\n", yyout);
 }
 
 void dia_main(dia_node* node) {
-  DIA_DEBUG("Welcome to the Dia World! main function detected!\n");
   DIA_DEBUG("Lemme write down bill of main function...\n");
   DIA_DEBUG("=== Main Function Started ===\n");
 

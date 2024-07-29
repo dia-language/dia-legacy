@@ -124,26 +124,16 @@ dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
  *
  */
 
-dia: DIA_MAIN_FUNC DIA_ALLOC dia_expr
+dia: custom_func dia_main
      {
-       // DIA_CODE_FILE_NAME is NULL when the diac runs in interactive mode
-       if (DIA_CODE_FILE_NAME != NULL)
-         _dia_comment_generating();
-
-       if (custom_functions)
-         $<node>$ = $<node>3;
-       else
-         dia_main($<node>3);
-     }
-   | custom_func dia
-     {
-       DIA_DEBUG("Welcome to the Dia World! main function with custom functions detected!\n");
+       DIA_DEBUG("Welcome to the Dia World!\n");
        custom_functions = $<func>1;
 
        for (custom_function_t* _func = $<func>1; _func != NULL; _func = _func->next) {
          dia_debug_function_descriptor(_func->node, 0);
        }
 
+       _dia_comment_generating();
        for (custom_function_t* _func = $<func>1; _func != NULL; _func = _func->next) {
          char* _name = _func->node->name;
          DIA_DEBUG("It is going to generate code for the function %s...\n", _name);
@@ -151,20 +141,22 @@ dia: DIA_MAIN_FUNC DIA_ALLOC dia_expr
          DIA_DEBUG("I'm expecting that code generation for the custom function is done...!\n");
        }
 
-       DIA_DEBUG("Let's go to the final job, (except for the cleanup)\n");
        dia_main($<node>2);
      }
    ;
 
 custom_func: /* If the custom_func reaches to the end, or the custom_func does not exist */ { $<func>$ = NULL; }
            | DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PARENTHESIS DIA_ALLOC dia_expr custom_func
+             {
+               DIA_DEBUG("DIA_IDENTIFIER ( dia_parameters ) DIA_ALLOC dia_expr custom_func");
+             }
            | DIA_IDENTIFIER DIA_ALLOC dia_expr custom_func
              {
                DIA_DEBUG("Dia: custom function, which name is '%s'\n", $1);
-               custom_function_t* func = (custom_function_t*)malloc(sizeof(custom_function_t));
+               custom_function_t* func = (custom_function_t*)calloc(1, sizeof(custom_function_t));
                func->next = $<func>4;
 
-               dia_node* node = (dia_node*)malloc(sizeof(dia_node));
+               dia_node* node = (dia_node*)calloc(1, sizeof(dia_node));
                node->name = strdup($1);
                node->next_function = $<node>3;
 
@@ -179,6 +171,13 @@ custom_func: /* If the custom_func reaches to the end, or the custom_func does n
                $<func>$ = func;
              }
            ;
+
+dia_main: DIA_MAIN_FUNC DIA_ALLOC dia_expr
+          {
+            DIA_DEBUG("Let's go to the final job, (except for the cleanup)\n");
+            $<node>$ = $<node>3;
+          }
+
 
 dia_expr: dia_expr DIA_BIND dia_expr
           {
@@ -208,7 +207,7 @@ dia_if: DIA_IF DIA_OPEN_PARENTHESIS dia_function DIA_CLOSE_PARENTHESIS dia_expr 
           dia_node* node = (dia_node*)malloc(sizeof(dia_node));
           node->name = strdup("if");
           node->num_of_params = 3;
-          node->parameters = (dia_node**)malloc(sizeof(dia_node*)*3);
+          node->parameters = (dia_node**)calloc(3, sizeof(dia_node*));
           node->parameters[0] = $<node>3;
           node->parameters[1] = $<node>5;
           node->parameters[2] = $<node>6;
@@ -224,6 +223,7 @@ dia_else: DIA_ELSE dia_if { $<node>$ = $<node>2; }
 
 dia_function: DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PARENTHESIS
               {
+                DIA_DEBUG("Entering dia_function\n");
                 dia_node* node = (dia_node*)malloc(sizeof(dia_node));
                 node->name = strdup($1);
 
