@@ -12,7 +12,7 @@
 extern FILE* yyin;
 extern FILE* yyout;
 
-char DIA_VERSION[] = "dia-2024.07.22.alpha";
+char DIA_VERSION[] = "dia-2024.07.30.alpha";
 char* DIA_CODE_FILE_NAME;
 uint8_t DIA_VERBOSE_LEVEL;
 

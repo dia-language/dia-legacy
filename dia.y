@@ -134,6 +134,7 @@ dia: custom_func dia_main
        }
 
        _dia_comment_generating();
+       _dia_header_definition();
        for (custom_function_t* _func = $<func>1; _func != NULL; _func = _func->next) {
          char* _name = _func->node->name;
          DIA_DEBUG("It is going to generate code for the function %s...\n", _name);

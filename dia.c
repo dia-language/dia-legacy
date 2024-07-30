@@ -145,25 +145,33 @@ dia_node* dia_print(dia_node* node) {
   return NULL;
 }
 
-dia_node* dia_if(dia_node* node) {
+dia_node* dia_if(dia_node* node, uint8_t _recursed) {
   if (node->num_of_params != 3)
     yyerror("If clause does not have three parameters.");
 
   DIA_DEBUG("dia_if: Code generating of if-else clause\n");
-  if (node->parameters[0]->parameters)
-    dia_generate_code(node->parameters[0]);
 
-  fprintf(yyout, "if(%s) {\n", dia_generate_code(node->parameters[1])->name);
-  //fprintf(yyout, "if(%s) {\n", node->parameters[0]->name);
-  //dia_generate_code(node->parameters[1]);
+  if (!_recursed) {
+    // First, generate code inside the parenthesis of 'if' clause.
+    // Then, the generated code should have the 'v%d' variable.
+    // This is why I record the VARIABLE_INDEX first.
+    int _variable_index = VARIABLE_INDEX;
+    for (dia_node* _node = node; !strcmp(_node->name, "if"); _node = _node->parameters[2])
+      dia_generate_code(_node->parameters[0]);
+    VARIABLE_INDEX = _variable_index;
+  }
+
+  fprintf(yyout, "if(v%d) {\n", VARIABLE_INDEX++);
+  dia_generate_code(node->parameters[1]);
   fputs("}", yyout);
   if (!strcmp(node->parameters[2]->name, "if")) {
     fputs(" else ", yyout);
-    dia_generate_code(node->parameters[2]);
+    dia_if(node->parameters[2], 1);
   }
   else {
     fputs(" else {", yyout);
     dia_generate_code(node->parameters[2]);
+    fputs("}\n", yyout);
   }
 
   return node;
@@ -177,7 +185,7 @@ dia_node* dia_generate_code(dia_node* node) {
   }
 
   if (!strcmp(node->name, "if")) {
-    dia_if(node);
+    dia_if(node, 0);
     return NULL;
   }
 
@@ -185,8 +193,12 @@ dia_node* dia_generate_code(dia_node* node) {
   for(; _func; _func = _func->next) {
     if (!strcmp(node->name, _func->node->name)) {
       DIA_DEBUG("dia_generate_code: %s was the custom function.\n", _func->node->name);
-      fprintf(yyout, "%s()", node->name);
-      break;
+      if (_func->node->type == 0 /* void */)
+        fprintf(yyout, "%s();\n", node->name);
+      else
+        fprintf(yyout, "auto v%d = %s();\n", VARIABLE_INDEX, node->name);
+
+      return _dia_create_cpp_variable(_func->node->type);
     }
   }
 
@@ -216,7 +228,6 @@ dia_node* dia_generate_code(dia_node* node) {
     /* Printing */
     {"puts", dia_puts, -1},
     {"print", dia_print, -1},
-    {"if", dia_if, 3},
     /* Arithmetic */
     {"plus", dia_plus, 2},
     {"minus", dia_minus, 2},
@@ -275,6 +286,12 @@ dia_node* dia_generate_code(dia_node* node) {
 
 // The main function
 
+void _dia_header_definition() {
+  fputs("#include<iostream>\n", yyout);
+  fputs("#include<string>\n", yyout);
+  fputs("#include<vector>\n\n", yyout);
+}
+
 void _dia_comment_generating() {
   DIA_DEBUG("Generating an explanation comment in the main function...\n");
 
@@ -305,14 +322,13 @@ void _dia_comment_generating() {
   fclose(source_file);
 
   fputs(" * ```\n", yyout);
-  fputs(" */\n", yyout);
+  fputs(" */\n\n", yyout);
 }
 
 void dia_custom_function(dia_node* node) {
   DIA_DEBUG("=== Function %s Started ===\n", node->name);
   VARIABLE_INDEX = 0;
 
-  //fprintf(yyout, "%s %s() {\n", dia_token_type_to_string(return_type), node->name);
   fprintf(yyout, "%s %s() {\n", dia_token_type_to_string(node->type), node->name);
 
   // To see the function is a constant function
@@ -327,13 +343,10 @@ void dia_custom_function(dia_node* node) {
     ++VARIABLE_INDEX;
   }
   else {
-    for (dia_node* _node = node->next_function; _node; _node = _node->next_function) {
+    for (dia_node* _node = node->next_function; _node; _node = _node->next_function)
       dia_generate_code(_node);
-      fputs(";\n", yyout);
-    }
   }
 
-  //if (return_type != 0 /* void */)
   if (node->type != 0 /* void */)
     fprintf(yyout, "return v%d;\n", --VARIABLE_INDEX);
   fputs("}\n", yyout);
@@ -349,9 +362,6 @@ void dia_main(dia_node* node) {
   DIA_DEBUG("=== Main Function Concluded ===\n\n");
   DIA_DEBUG("Generating the main function code...\n");
 
-  fputs("#include<iostream>\n", yyout);
-  fputs("#include<string>\n", yyout);
-  fputs("#include<vector>\n", yyout);
   fputs("int main(int argc, char** argv) {\n", yyout);
 
   for (dia_node* _node = node; _node != NULL; _node = _node->next_function)
