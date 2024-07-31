@@ -5,3 +5,6 @@
 diac
 dia_lexer
 a.out
+
+# Tested .cpp files
+*.cpp
