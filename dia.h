@@ -22,6 +22,8 @@ dia_node* dia_bool(dia_node* arg);
 
 // Utility functions
 char* dia_token_type_to_string(DIA_TOKEN_TYPE type);
+DIA_TOKEN_TYPE dia_token_type_from_string(char* strtype);
+uint8_t is_variable(dia_node* node);
 void dia_free_node (dia_node* node);
 dia_node* dia_bind(dia_node* prev, dia_node* next);
 void dia_debug_function_descriptor(dia_node* node, int depth);

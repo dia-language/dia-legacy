@@ -7,6 +7,8 @@ extern FILE* yyout;
 extern void yyerror();
 extern custom_function_t* custom_functions;
 
+dia_node* current_function;
+
 int VARIABLE_INDEX;
 
 dia_node* dia_string(dia_node* arg) {
@@ -44,8 +46,42 @@ char* dia_token_type_to_string(DIA_TOKEN_TYPE type) {
       return "void";
     default:
       DIA_DEBUG("dia_token_type_to_string: Unknown Type: %d\n", type);
-      yyerror("Unknown Type.");
+      yyerror("Unknown type.");
   }
+}
+
+DIA_TOKEN_TYPE dia_token_type_from_string(char* strtype) {
+  if (!strcmp(strtype, "int"))
+    return DIA_INTEGER;
+  else if (!strcmp(strtype, "double"))
+    return DIA_DOUBLE;
+  else if (!strcmp(strtype, "string"))
+    return DIA_STRING;
+  else if (!strcmp(strtype, "str"))
+    return DIA_STRING;
+  else if (!strcmp(strtype, "bool"))
+    return DIA_BOOL;
+  else if (!strcmp(strtype, "void"))
+    return 0;
+  else {
+    DIA_DEBUG("dia_toekn_type_from_string: Unknown type: %s\n", strtype);
+    yyerror("Unknown type.");
+  }
+}
+
+uint8_t is_variable(dia_node* node) {
+  char _first = node->name[0];
+  DIA_TOKEN_TYPE _type = node->type;
+
+  if ((_type == DIA_INTEGER && (_first >= '0' && _first <= '9')) ||
+   (_type == DIA_DOUBLE && (_first >= '0' && _first <= '9')) ||
+   (_type == DIA_STRING && _first == '"') ||
+   (_type == DIA_BOOL &&
+    strcmp(node->name, "true") && strcmp(node->name, "True") &&
+    strcmp(node->name, "false") && strcmp(node->name, "False")))
+    return 1;
+  else
+    return 0;
 }
 
 void dia_free_node (dia_node* node) {
@@ -107,7 +143,14 @@ void dia_debug_function_descriptor(dia_node* node, int depth) {
 
   // node traversal to generate parameters
   for (int i=0; i<node->num_of_params; i++) {
-    DIA_DEBUG("- Parameter: %s\n", node->parameters[i]->name);
+    dia_node* _param = node->parameters[i];
+    if (node->parameters[i]->type) {
+      DIA_DEBUG("- Parameter: %s (%s)\n",
+          _param->name, dia_token_type_to_string(_param->type));
+    }
+    else
+      DIA_DEBUG("- Parameter: %s\n", _param->name);
+
     if (node->parameters[i]->parameters != NULL)
       dia_debug_function_descriptor(node->parameters[i], ++depth);
   }
@@ -194,11 +237,27 @@ dia_node* dia_generate_code(dia_node* node) {
     if (!strcmp(node->name, _func->node->name)) {
       DIA_DEBUG("dia_generate_code: %s was the custom function.\n", _func->node->name);
       if (_func->node->type == 0 /* void */)
-        fprintf(yyout, "%s();\n", node->name);
+        fprintf(yyout, "%s(", node->name);
       else
-        fprintf(yyout, "auto v%d = %s();\n", VARIABLE_INDEX, node->name);
+        fprintf(yyout, "auto v%d = %s(", VARIABLE_INDEX, node->name);
 
+      for (int i=0; i<node->num_of_params-1; i++)
+        fprintf(yyout, "%s,", node->parameters[i]->name);
+      if (node->num_of_params)
+        fprintf(yyout, "%s", node->parameters[node->num_of_params-1]->name);
+      fprintf(yyout, ");\n");
       return _dia_create_cpp_variable(_func->node->type);
+    }
+  }
+
+  for (int i=0; current_function && i<current_function->num_of_params; i++) {
+    if (!strcmp(node->name, current_function->parameters[i]->name)) {
+      DIA_DEBUG("dia_generate_code: %s was one of the parameter of "
+          "the custom function.\n", node->name);
+
+      node->type = current_function->parameters[i]->type;
+      fputs(node->name, yyout);
+      return node;
     }
   }
 
@@ -209,6 +268,11 @@ dia_node* dia_generate_code(dia_node* node) {
           node->parameters[i]->type = _function->node->type;
           break;
         }
+      }
+
+      for (int j=0; current_function && j<current_function->num_of_params; j++) {
+        if (!strcmp(node->parameters[i]->name, current_function->parameters[j]->name))
+          node->parameters[i]->type = current_function->parameters[i]->type;
       }
 
       if (node->parameters[i]->parameters != NULL)
@@ -328,17 +392,18 @@ void _dia_comment_generating() {
 void dia_custom_function(dia_node* node) {
   DIA_DEBUG("=== Function %s Started ===\n", node->name);
   VARIABLE_INDEX = 0;
+  current_function = node;
 
-  fprintf(yyout, "%s %s() {\n", dia_token_type_to_string(node->type), node->name);
+  fprintf(yyout, "%s %s(", dia_token_type_to_string(node->type), node->name);
+  if (node->num_of_params > 0)
+    fprintf(yyout, "%s %s", dia_token_type_to_string(node->type), node->parameters[0]->name);
+  for (int i=1; i<node->num_of_params; i++)
+    fprintf(yyout, ",%s %s", dia_token_type_to_string(node->type), node->parameters[i]->name);
+  fprintf(yyout, ") {\n");
 
   // To see the function is a constant function
   // enjoy = "Enjoy!"
-  DIA_TOKEN_TYPE _type = node->next_function->type;
-  char _first = node->next_function->name[0];
-
-  if ((_type == DIA_INTEGER && (_first >= '0' && _first <= '9')) ||
-   (_type == DIA_DOUBLE && (_first >= '0' && _first <= '9')) ||
-   (_type == DIA_STRING && _first == '"')) {
+  if (is_variable(node->next_function)) {
     fprintf(yyout, "auto v%d = %s;\n", VARIABLE_INDEX, node->next_function->name);
     ++VARIABLE_INDEX;
   }
@@ -350,6 +415,8 @@ void dia_custom_function(dia_node* node) {
   if (node->type != 0 /* void */)
     fprintf(yyout, "return v%d;\n", --VARIABLE_INDEX);
   fputs("}\n", yyout);
+
+  current_function = NULL;
 }
 
 void dia_main(dia_node* node) {

@@ -95,6 +95,8 @@ dia_node* dia_create_node(char* node_name, DIA_TOKEN_TYPE type);
 %token DIA_OPEN_BRACKET       "["
 %token DIA_CLOSE_BRACKET      "]"
 
+%token DIA_COLON              ":"
+
 %token DIA_IF                 "if"
 %token DIA_ELSE               "else"
 
@@ -147,9 +149,37 @@ dia: custom_func dia_main
    ;
 
 custom_func: /* If the custom_func reaches to the end, or the custom_func does not exist */ { $<func>$ = NULL; }
-           | DIA_IDENTIFIER DIA_OPEN_PARENTHESIS dia_parameters DIA_CLOSE_PARENTHESIS DIA_ALLOC dia_expr custom_func
+           | DIA_IDENTIFIER DIA_OPEN_PARENTHESIS custom_parameters DIA_CLOSE_PARENTHESIS DIA_COLON DIA_IDENTIFIER DIA_ALLOC dia_expr custom_func
              {
-               DIA_DEBUG("DIA_IDENTIFIER ( dia_parameters ) DIA_ALLOC dia_expr custom_func");
+               DIA_DEBUG("DIA_IDENTIFIER ( dia_parameters [:types], ... ) : type DIA_ALLOC dia_expr custom_func\n");
+
+               custom_function_t* func = (custom_function_t*)calloc(1, sizeof(custom_function_t));
+               func->next = $<func>9;
+
+               dia_node* node = (dia_node*)calloc(1, sizeof(dia_node));
+               node->name = strdup($1);
+               node->next_function = $<node>8;
+               node->type = dia_token_type_from_string($<str>6);
+
+               node->num_of_params = 0;
+               for (dia_node* _node = $<node>3; _node; _node = _node->next_function)
+                 node->num_of_params++;
+
+               node->parameters = (dia_node**)calloc(node->num_of_params, sizeof(dia_node*));
+
+               dia_node* _param = $<node>3;
+               for (int i=0; i<node->num_of_params; i++) {
+                 dia_node* tmp = _param->next_function;
+                 node->parameters[i] = _param;
+
+                 _param->next_function = NULL;
+                 _param = tmp;
+               }
+               if (_param != NULL)
+                 DIA_DEBUG("warning: There is an unhandled parameter in the custom function %s.\n", node->name);
+
+               func->node = node;
+               $<func>$ = func;
              }
            | DIA_IDENTIFIER DIA_ALLOC dia_expr custom_func
              {
@@ -160,6 +190,7 @@ custom_func: /* If the custom_func reaches to the end, or the custom_func does n
                dia_node* node = (dia_node*)calloc(1, sizeof(dia_node));
                node->name = strdup($1);
                node->next_function = $<node>3;
+               node->num_of_params = 0;
 
                DIA_TOKEN_TYPE return_type = 0;
                for (dia_node* _node = node->next_function; _node != NULL; _node = _node->next_function) {
@@ -172,6 +203,23 @@ custom_func: /* If the custom_func reaches to the end, or the custom_func does n
                $<func>$ = func;
              }
            ;
+
+custom_parameters: DIA_IDENTIFIER DIA_COLON DIA_IDENTIFIER
+                   {
+                     dia_node* node = (dia_node*)calloc(1, sizeof(dia_node));
+                     node->name = $<str>1;
+                     node->type = dia_token_type_from_string($<str>3);
+                     $<node>$ = node;
+                   }
+                 | DIA_IDENTIFIER DIA_COLON DIA_IDENTIFIER DIA_COMMA custom_parameters
+                   {
+                     dia_node* node = (dia_node*)calloc(1, sizeof(dia_node));
+                     node->name = $<str>1;
+                     node->type = dia_token_type_from_string($<str>3);
+                     node->next_function = $<node>5;
+                     $<node>$ = node;
+                   }
+                 ;
 
 dia_main: DIA_MAIN_FUNC DIA_ALLOC dia_expr
           {
