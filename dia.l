@@ -106,18 +106,18 @@ void yyerror(const char* str);
 "not"                       { DIA_DEBUG("DIA_LOGICAL_NOT\n"); return DIA_LOGICAL_NOT; }
 
   /* dia_comparison */
-"=="                        { DIA_DEBUG("DIA_EQUAL"); return DIA_EQUAL; }
-">="                        { DIA_DEBUG("DIA_GREATER_EQUAL"); return DIA_GREATER_EQUAL; }
-">"                         { DIA_DEBUG("DIA_GREATER"); return DIA_GREATER; }
-"<="                        { DIA_DEBUG("DIA_LESS_EQUAL"); return DIA_LESS_EQUAL; }
-"<"                         { DIA_DEBUG("DIA_LESS"); return DIA_LESS; }
+"=="                        { DIA_DEBUG("DIA_EQUAL\n"); return DIA_EQUAL; }
+">="                        { DIA_DEBUG("DIA_GREATER_EQUAL\n"); return DIA_GREATER_EQUAL; }
+">"                         { DIA_DEBUG("DIA_GREATER\n"); return DIA_GREATER; }
+"<="                        { DIA_DEBUG("DIA_LESS_EQUAL\n"); return DIA_LESS_EQUAL; }
+"<"                         { DIA_DEBUG("DIA_LESS\n"); return DIA_LESS; }
 
   /* dia_bitwise */
-"&"                         { DIA_DEBUG("DIA_BIT_AND"); return DIA_BIT_AND; }
-"^"                         { DIA_DEBUG("DIA_BIT_XOR"); return DIA_BIT_XOR; }
-"xor"                       { DIA_DEBUG("DIA_BIT_XOR"); return DIA_BIT_XOR; }
-"|"                         { DIA_DEBUG("DIA_BIT_OR"); return DIA_BIT_OR; }
-"~"                         { DIA_DEBUG("DIA_BIT_NOT"); return DIA_BIT_NOT; }
+"&"                         { DIA_DEBUG("DIA_BIT_AND\n"); return DIA_BIT_AND; }
+"^"                         { DIA_DEBUG("DIA_BIT_XOR\n"); return DIA_BIT_XOR; }
+"xor"                       { DIA_DEBUG("DIA_BIT_XOR\n"); return DIA_BIT_XOR; }
+"|"                         { DIA_DEBUG("DIA_BIT_OR\n"); return DIA_BIT_OR; }
+"~"                         { DIA_DEBUG("DIA_BIT_NOT\n"); return DIA_BIT_NOT; }
 
   /* Calculation Token: End */
 
@@ -135,11 +135,12 @@ void yyerror(const char* str);
 "main"                      { DIA_DEBUG("DIA_MAIN_FUNC\n"); return DIA_MAIN_FUNC; }
 "if"                        { DIA_DEBUG("DIA_IF\n"); return DIA_IF; }
 "else"                      { DIA_DEBUG("DIA_ELSE\n"); return DIA_ELSE; }
-[a-zA-Z_][a-zA-Z0-9_-]*     { DIA_DEBUG("DIA_IDENTIFIER: %s\n", yytext);
+[a-zA-Z_][a-zA-Z0-9_]*     { DIA_DEBUG("DIA_IDENTIFIER: %s\n", yytext);
                               yylval.str = strndup(yytext, strlen(yytext));
                               return DIA_IDENTIFIER; }
 
 "="                         { DIA_DEBUG("DIA_ALLOC\n"); return DIA_ALLOC; }
+":"                         { DIA_DEBUG("DIA_COLON\n"); return DIA_COLON; }
 
 .                           { DIA_DEBUG("Error: Unknown Token - %s\n", yytext); }
 
