@@ -135,7 +135,7 @@ void yyerror(const char* str);
 "main"                      { DIA_DEBUG("DIA_MAIN_FUNC\n"); return DIA_MAIN_FUNC; }
 "if"                        { DIA_DEBUG("DIA_IF\n"); return DIA_IF; }
 "else"                      { DIA_DEBUG("DIA_ELSE\n"); return DIA_ELSE; }
-[a-zA-Z_][a-zA-Z0-9_-]+     { DIA_DEBUG("DIA_IDENTIFIER: %s\n", yytext);
+[a-zA-Z_][a-zA-Z0-9_-]*     { DIA_DEBUG("DIA_IDENTIFIER: %s\n", yytext);
                               yylval.str = strndup(yytext, strlen(yytext));
                               return DIA_IDENTIFIER; }
 
