@@ -23,6 +23,10 @@ uint8_t DIA_VERBOSE_LEVEL;
 uint8_t _SKIP_FORMAT;
 uint8_t _NO_COMPILE;
 uint8_t _PRINT_TO_STDOUT;
+uint8_t _MAKE_FUNCTIONS_CONSTEXPR;
+uint8_t _MAKE_FUNCTIONS_PURE;
+uint8_t _FASTER_IO;
+uint8_t _QUIET;
 
 void dia_interactive_banner() {
     puts("Dia: Switching to the interactive mode.");
@@ -36,8 +40,16 @@ void dia_help() {
   puts("Dia: The brilliance of Diamond, the elegance of the Language\n");
   puts("Usage: diac [options] file.dia\n");
   puts("Option:");
-  puts("  -v[v..]   Increase the level of verbosity (-v to -vvvv)");
-  puts("  --stdout  Print compiled code to terminal\n\n");
+  puts("  -v[v..]       Increase the level of verbosity (-v to -vvvv)");
+  puts("  --stdout      Print compiled code to terminal");
+  puts("  --no-compile  Do not compile, persist the source code.");
+  puts("  --skip-format Skip formatting the generated code using clang-format.\n");
+  puts("  --quiet       Do not generate file comment.");
+  puts("Experimental Options:");
+  puts("  --pure        Add [[gnu::pure]] macro to all custom functions.");
+  puts("  --constexpr   Add constexpr keyword to all custom functions.");
+  puts("  --faster-io   Disable input and output buffer to increase I/O performance.");
+  puts("                (Should be used on competitive programming)");
 }
 
 void dia_verbosity(char* argument) {
@@ -58,6 +70,22 @@ void _no_compile(char* argument) {
 
 void _print_to_stdout(char* argument) {
   _PRINT_TO_STDOUT = 1;
+}
+
+void _make_functions_constexpr(char* argument) {
+  _MAKE_FUNCTIONS_CONSTEXPR = 1;
+}
+
+void _make_functions_pure(char* argument) {
+  _MAKE_FUNCTIONS_PURE = 1;
+}
+
+void _faster_io(char* argument) {
+  _FASTER_IO = 1;
+}
+
+void _quiet(char* argument) {
+  _QUIET = 1;
 }
 
 typedef struct {
@@ -96,6 +124,9 @@ int main(int argc, char** argv) {
     {"--stdout", _print_to_stdout},
     {"--no-compile", _no_compile},
     {"--skip-format", _skip_format},
+    {"--pure", _make_functions_pure},
+    {"--constexpr", _make_functions_constexpr},
+    {"--faster-io", _faster_io}
   };
 
   // Setting up appropriate flags
@@ -131,6 +162,12 @@ int main(int argc, char** argv) {
   yyparse();
   if (yyout != stdout)
     fclose(yyout);
+
+  if (_PRINT_TO_STDOUT) {
+    DIA_DEBUG("Compiling and formatting are disabled if the --stdout flag was set.\n");
+    DIA_DEBUG("All jobs were done!\n");
+    return 0;
+  }
 
   if (_NO_COMPILE) {
     DIA_DEBUG("main.c: You chose not to compile the generated code. Skipping.\n");
@@ -175,5 +212,6 @@ int main(int argc, char** argv) {
       DIA_DEBUG("main.c: clang-format not found. Skipping.\n");
   }
 
+  DIA_DEBUG("The Dia compiler reached to the end. Thank you for using the Dia Compiler!\n");
   return 0;
 }

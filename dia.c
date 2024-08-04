@@ -6,6 +6,10 @@ extern char* DIA_CODE_FILE_NAME;
 extern FILE* yyout;
 extern void yyerror();
 extern custom_function_t* custom_functions;
+extern uint8_t _QUIET;
+extern uint8_t _FASTER_IO;
+extern uint8_t _MAKE_FUNCTIONS_PURE;
+extern uint8_t _MAKE_FUNCTIONS_CONSTEXPR;
 
 dia_node* current_function;
 
@@ -421,12 +425,15 @@ void dia_custom_function(dia_node* node) {
   VARIABLE_INDEX = 0;
   current_function = node;
 
+  if (_MAKE_FUNCTIONS_PURE) fprintf(yyout, "[[gnu::pure]] ");
+  if (_MAKE_FUNCTIONS_CONSTEXPR) fprintf(yyout, "constexpr ");
   fprintf(yyout, "%s %s(", dia_token_type_to_string(node->type), node->name);
   if (node->num_of_params > 0)
     fprintf(yyout, "%s %s", dia_token_type_to_string(node->type), node->parameters[0]->name);
   for (int i=1; i<node->num_of_params; i++)
     fprintf(yyout, ",%s %s", dia_token_type_to_string(node->type), node->parameters[i]->name);
-  fprintf(yyout, ") {\n");
+  fprintf(yyout, ")");
+  fprintf(yyout, "{\n");
 
   // To see the function is a constant function
   // enjoy = "Enjoy!"
@@ -457,6 +464,10 @@ void dia_main(dia_node* node) {
   DIA_DEBUG("Generating the main function code...\n");
 
   fputs("int main(int argc, char** argv) {\n", yyout);
+  if (_FASTER_IO) {
+    fputs("std::cin.tie(nullptr);\n", yyout);
+    fputs("std::ios_base::sync_with_stdio(false);\n", yyout);
+  }
 
   for (dia_node* _node = node; _node != NULL; _node = _node->next_function)
     dia_generate_code(_node);

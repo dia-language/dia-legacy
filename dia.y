@@ -12,6 +12,7 @@ extern char* yytext;
 extern int yylex();
 extern void yyerror(const char*);
 extern char* DIA_CODE_FILE_NAME;
+extern uint8_t _QUIET;
 
 struct _custom_function_t* custom_functions;
 %}
@@ -135,7 +136,8 @@ dia: custom_func dia_main
          dia_debug_function_descriptor(_func->node, 0);
        }
 
-       _dia_comment_generating();
+       if (!_QUIET) _dia_comment_generating();
+
        _dia_header_definition();
        for (custom_function_t* _func = $<func>1; _func != NULL; _func = _func->next) {
          char* _name = _func->node->name;
