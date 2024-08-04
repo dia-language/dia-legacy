@@ -238,8 +238,8 @@ dia_node* dia_greater(dia_node* node) {
   dia_node* a = node->parameters[0];
   dia_node* b = node->parameters[1];
 
-  if ((a->type == DIA_INTEGER && a->type == DIA_DOUBLE) &&
-      (b->type == DIA_INTEGER && b->type == DIA_DOUBLE)) {
+  if ((a->type == DIA_INTEGER || a->type == DIA_DOUBLE) &&
+      (b->type == DIA_INTEGER || b->type == DIA_DOUBLE)) {
     fprintf(yyout, "auto v%d = %s&>%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
@@ -254,8 +254,8 @@ dia_node* dia_less_equal(dia_node* node) {
   dia_node* a = node->parameters[0];
   dia_node* b = node->parameters[1];
 
-  if ((a->type == DIA_INTEGER && a->type == DIA_DOUBLE) &&
-      (b->type == DIA_INTEGER && b->type == DIA_DOUBLE)) {
+  if ((a->type == DIA_INTEGER || a->type == DIA_DOUBLE) &&
+      (b->type == DIA_INTEGER || b->type == DIA_DOUBLE)) {
     fprintf(yyout, "auto v%d = %s<=%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
@@ -270,8 +270,8 @@ dia_node* dia_less(dia_node* node) {
   dia_node* a = node->parameters[0];
   dia_node* b = node->parameters[1];
 
-  if ((a->type == DIA_INTEGER && a->type == DIA_DOUBLE) &&
-      (b->type == DIA_INTEGER && b->type == DIA_DOUBLE)) {
+  if ((a->type == DIA_INTEGER || a->type == DIA_DOUBLE) &&
+      (b->type == DIA_INTEGER || b->type == DIA_DOUBLE)) {
     fprintf(yyout, "auto v%d = %s<%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
