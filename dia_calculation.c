@@ -131,7 +131,7 @@ dia_node* dia_mod(dia_node* node) {
   }
 
   if (a->type == DIA_INTEGER && b->type == DIA_INTEGER) {
-    fprintf(yyout, "auto v%d = %s%%%s\n", VARIABLE_INDEX, a->name, b->name);
+    fprintf(yyout, "auto v%d = %s%%%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_INTEGER);
   }
   else {
@@ -147,7 +147,7 @@ dia_node* dia_logical_and(dia_node* node) {
   dia_node* b = node->parameters[1];
 
   if (a->type == DIA_BOOL && b->type == DIA_BOOL) {
-    fprintf(yyout, "auto v%d = %s&&%s\n", VARIABLE_INDEX, a->name, b->name);
+    fprintf(yyout, "auto v%d = %s&&%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
   else {
@@ -162,7 +162,7 @@ dia_node* dia_logical_or(dia_node* node) {
   dia_node* b = node->parameters[1];
 
   if (a->type == DIA_BOOL && b->type == DIA_BOOL) {
-    fprintf(yyout, "auto v%d = %s&&%s\n", VARIABLE_INDEX, a->name, b->name);
+    fprintf(yyout, "auto v%d = %s||%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
   else {
@@ -176,7 +176,7 @@ dia_node* dia_logical_not(dia_node* node) {
   dia_node* a = node->parameters[0];
 
   if (a->type == DIA_BOOL) {
-    fprintf(yyout, "auto v%d = !%s\n", VARIABLE_INDEX, a->name);
+    fprintf(yyout, "auto v%d = !%s;\n", VARIABLE_INDEX, a->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
   else {
@@ -190,9 +190,9 @@ dia_node* dia_equal(dia_node* node) {
   dia_node* a = node->parameters[0];
   dia_node* b = node->parameters[1];
 
-  if ((a->type == DIA_BOOL && a->type == DIA_INTEGER && a->type == DIA_DOUBLE) &&
-      (b->type == DIA_BOOL && b->type == DIA_INTEGER && b->type == DIA_DOUBLE)) {
-    fprintf(yyout, "auto v%d = %s==%s\n", VARIABLE_INDEX, a->name, b->name);
+  if ((a->type == DIA_BOOL || a->type == DIA_INTEGER || a->type == DIA_DOUBLE) &&
+      (b->type == DIA_BOOL || b->type == DIA_INTEGER || b->type == DIA_DOUBLE)) {
+    fprintf(yyout, "auto v%d = %s==%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
   else {
@@ -206,9 +206,9 @@ dia_node* dia_not_equal(dia_node* node) {
   dia_node* a = node->parameters[0];
   dia_node* b = node->parameters[1];
 
-  if ((a->type == DIA_BOOL && a->type == DIA_INTEGER && a->type == DIA_DOUBLE) &&
-      (b->type == DIA_BOOL && b->type == DIA_INTEGER && b->type == DIA_DOUBLE)) {
-    fprintf(yyout, "auto v%d = %s!=%s\n", VARIABLE_INDEX, a->name, b->name);
+  if ((a->type == DIA_BOOL || a->type == DIA_INTEGER || a->type == DIA_DOUBLE) &&
+      (b->type == DIA_BOOL || b->type == DIA_INTEGER || b->type == DIA_DOUBLE)) {
+    fprintf(yyout, "auto v%d = %s!=%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
   else {
@@ -222,15 +222,15 @@ dia_node* dia_greater_equal(dia_node* node) {
   dia_node* a = node->parameters[0];
   dia_node* b = node->parameters[1];
 
-  if ((a->type == DIA_INTEGER && a->type == DIA_DOUBLE) &&
-      (b->type == DIA_INTEGER && b->type == DIA_DOUBLE)) {
-    fprintf(yyout, "auto v%d = %s>=%s\n", VARIABLE_INDEX, a->name, b->name);
+  if ((a->type == DIA_INTEGER || a->type == DIA_DOUBLE) &&
+      (b->type == DIA_INTEGER || b->type == DIA_DOUBLE)) {
+    fprintf(yyout, "auto v%d = %s>=%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
   else {
-    DIA_DEBUG("dia_logical_or: Unsupported type parameter: %d, %d\n",
+    DIA_DEBUG("dia_greater_equal: Unsupported type parameter: %d, %d\n",
         a->type, b->type);
-    yyerror("dia_logical_or: Unsupported parameter type");
+    yyerror("dia_greater_equal: Unsupported parameter type");
   }
 }
 
@@ -240,13 +240,13 @@ dia_node* dia_greater(dia_node* node) {
 
   if ((a->type == DIA_INTEGER && a->type == DIA_DOUBLE) &&
       (b->type == DIA_INTEGER && b->type == DIA_DOUBLE)) {
-    fprintf(yyout, "auto v%d = %s&>%s\n", VARIABLE_INDEX, a->name, b->name);
+    fprintf(yyout, "auto v%d = %s&>%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
   else {
-    DIA_DEBUG("dia_logical_or: Unsupported type parameter: %d, %d\n",
+    DIA_DEBUG("dia_greater: Unsupported type parameter: %d, %d\n",
         a->type, b->type);
-    yyerror("dia_logical_or: Unsupported parameter type");
+    yyerror("dia_greater: Unsupported parameter type");
   }
 }
 
@@ -256,13 +256,13 @@ dia_node* dia_less_equal(dia_node* node) {
 
   if ((a->type == DIA_INTEGER && a->type == DIA_DOUBLE) &&
       (b->type == DIA_INTEGER && b->type == DIA_DOUBLE)) {
-    fprintf(yyout, "auto v%d = %s<=%s\n", VARIABLE_INDEX, a->name, b->name);
+    fprintf(yyout, "auto v%d = %s<=%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
   else {
-    DIA_DEBUG("dia_logical_or: Unsupported type parameter: %d, %d\n",
+    DIA_DEBUG("dia_less_equal: Unsupported type parameter: %d, %d\n",
         a->type, b->type);
-    yyerror("dia_logical_or: Unsupported parameter type");
+    yyerror("dia_less_equal: Unsupported parameter type");
   }
 }
 
@@ -272,13 +272,13 @@ dia_node* dia_less(dia_node* node) {
 
   if ((a->type == DIA_INTEGER && a->type == DIA_DOUBLE) &&
       (b->type == DIA_INTEGER && b->type == DIA_DOUBLE)) {
-    fprintf(yyout, "auto v%d = %s<%s\n", VARIABLE_INDEX, a->name, b->name);
+    fprintf(yyout, "auto v%d = %s<%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
   else {
-    DIA_DEBUG("dia_logical_or: Unsupported type parameter: %d, %d\n",
+    DIA_DEBUG("dia_less: Unsupported type parameter: %d, %d\n",
         a->type, b->type);
-    yyerror("dia_logical_or: Unsupported parameter type");
+    yyerror("dia_less: Unsupported parameter type");
   }
 }
 
@@ -288,13 +288,13 @@ dia_node* dia_bit_and(dia_node* node) {
   dia_node* b = node->parameters[1];
 
   if (a->type == DIA_INTEGER && b->type == DIA_INTEGER) {
-    fprintf(yyout, "auto v%d = %s&%s\n", VARIABLE_INDEX, a->name, b->name);
+    fprintf(yyout, "auto v%d = %s&%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
   else {
-    DIA_DEBUG("dia_logical_or: Unsupported type parameter: %d, %d\n",
+    DIA_DEBUG("dia_bit_and: Unsupported type parameter: %d, %d\n",
         a->type, b->type);
-    yyerror("dia_logical_or: Unsupported parameter type");
+    yyerror("dia_bit_and: Unsupported parameter type");
   }
 }
 
@@ -303,13 +303,13 @@ dia_node* dia_bit_or(dia_node* node) {
   dia_node* b = node->parameters[1];
 
   if (a->type == DIA_INTEGER && b->type == DIA_INTEGER) {
-    fprintf(yyout, "auto v%d = %s|%s\n", VARIABLE_INDEX, a->name, b->name);
+    fprintf(yyout, "auto v%d = %s|%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
   else {
-    DIA_DEBUG("dia_logical_or: Unsupported type parameter: %d, %d\n",
+    DIA_DEBUG("dia_bit_or: Unsupported type parameter: %d, %d\n",
         a->type, b->type);
-    yyerror("dia_logical_or: Unsupported parameter type");
+    yyerror("dia_bit_or: Unsupported parameter type");
   }
 }
 
@@ -318,24 +318,24 @@ dia_node* dia_bit_xor(dia_node* node) {
   dia_node* b = node->parameters[1];
 
   if (a->type == DIA_INTEGER && b->type == DIA_INTEGER) {
-    fprintf(yyout, "auto v%d = %s^%s\n", VARIABLE_INDEX, a->name, b->name);
+    fprintf(yyout, "auto v%d = %s^%s;\n", VARIABLE_INDEX, a->name, b->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
   else {
-    DIA_DEBUG("dia_logical_or: Unsupported type parameter: %d, %d\n",
+    DIA_DEBUG("dia_bit_xor: Unsupported type parameter: %d, %d\n",
         a->type, b->type);
-    yyerror("dia_logical_or: Unsupported parameter type");
+    yyerror("dia_bit_xor: Unsupported parameter type");
   }
 }
 
 dia_node* dia_bit_not(dia_node* node) {
   if (node->type == DIA_INTEGER) {
-    fprintf(yyout, "auto v%d = ~%s\n", VARIABLE_INDEX, node->name);
+    fprintf(yyout, "auto v%d = ~%s;\n", VARIABLE_INDEX, node->name);
     return _dia_create_cpp_variable(DIA_BOOL);
   }
   else {
-    DIA_DEBUG("dia_logical_or: Unsupported type parameter: %d\n", node->type);
-    yyerror("dia_logical_or: Unsupported parameter type");
+    DIA_DEBUG("dia_bit_not: Unsupported type parameter: %d\n", node->type);
+    yyerror("dia_bit_not: Unsupported parameter type");
   }
 }
 

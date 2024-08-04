@@ -17,7 +17,7 @@ extern FILE* yyin;
 extern FILE* yyout;
 extern int errno;
 
-char DIA_VERSION[] = "dia-2024.07.30.alpha";
+char DIA_VERSION[] = "dia-2024.08.04.alpha";
 char* DIA_CODE_FILE_NAME;
 uint8_t DIA_VERBOSE_LEVEL;
 uint8_t _SKIP_FORMAT;

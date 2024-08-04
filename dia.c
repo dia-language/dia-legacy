@@ -79,9 +79,9 @@ uint8_t is_variable(dia_node* node) {
    (_type == DIA_BOOL &&
     strcmp(node->name, "true") && strcmp(node->name, "True") &&
     strcmp(node->name, "false") && strcmp(node->name, "False")))
-    return 1;
+    return 0; // false
   else
-    return 0;
+    return 1; // true
 }
 
 void dia_free_node (dia_node* node) {
@@ -205,7 +205,16 @@ dia_node* dia_if(dia_node* node, uint8_t _recursed) {
   }
 
   fprintf(yyout, "if(v%d) {\n", VARIABLE_INDEX++);
-  dia_generate_code(node->parameters[1]);
+  if (node->parameters[1]->type == DIA_BOOL ||
+      node->parameters[1]->type == DIA_STRING ||
+      node->parameters[1]->type == DIA_INTEGER ||
+      node->parameters[1]->type == DIA_DOUBLE)
+    fprintf(yyout, "return %s;\n", node->parameters[1]->name);
+  else {
+    dia_generate_code(node->parameters[1]);
+    fprintf(yyout, "return v%d;\n", --VARIABLE_INDEX);
+  }
+
   fputs("}", yyout);
   if (!strcmp(node->parameters[2]->name, "if")) {
     fputs(" else ", yyout);
@@ -213,10 +222,22 @@ dia_node* dia_if(dia_node* node, uint8_t _recursed) {
   }
   else {
     fputs(" else {", yyout);
-    dia_generate_code(node->parameters[2]);
+    if (node->parameters[2]->type == DIA_BOOL ||
+        node->parameters[2]->type == DIA_STRING ||
+        node->parameters[2]->type == DIA_INTEGER ||
+        node->parameters[2]->type == DIA_DOUBLE)
+      fprintf(yyout, "return %s;\n", node->parameters[2]->name);
+    else {
+      dia_generate_code(node->parameters[2]);
+      fprintf(yyout, "return v%d;\n", --VARIABLE_INDEX);
+    }
     fputs("}\n", yyout);
   }
 
+  if ((node->parameters[1]->type != node->parameters[2]->type) &&
+    !strcmp(node->parameters[2]->name, "if"))
+  DIA_DEBUG("warning: Body of if and else returns different types: %d, %d\n",
+      node->parameters[1]->type, node->parameters[2]->type);
   return node;
 }
 
@@ -236,6 +257,12 @@ dia_node* dia_generate_code(dia_node* node) {
   for(; _func; _func = _func->next) {
     if (!strcmp(node->name, _func->node->name)) {
       DIA_DEBUG("dia_generate_code: %s was the custom function.\n", _func->node->name);
+
+      for (int i=0; i<node->num_of_params; i++) {
+        if (is_variable(node->parameters[i]))
+          node->parameters[i] = dia_generate_code(node->parameters[i]);
+      }
+
       if (_func->node->type == 0 /* void */)
         fprintf(yyout, "%s(", node->name);
       else
@@ -303,12 +330,12 @@ dia_node* dia_generate_code(dia_node* node) {
     {"logical_or", dia_logical_or, 2},
     {"logical_not", dia_logical_not, 1},
     /* Comparison */
-    {"equal", dia_logical_and, 2},
-    {"not_equal", dia_logical_and, 2},
-    {"greater_equal", dia_logical_and, 2},
-    {"greater", dia_logical_and, 2},
-    {"less_equal", dia_logical_and, 2},
-    {"less", dia_logical_and, 2},
+    {"equal", dia_equal, 2},
+    {"not_equal", dia_not_equal, 2},
+    {"greater_equal", dia_greater_equal, 2},
+    {"greater", dia_greater, 2},
+    {"less_equal", dia_less_equal, 2},
+    {"less", dia_less, 2},
     /* Bitwise operation */
     {"bit_and", dia_bit_and, 2},
     {"bit_or", dia_bit_and, 2},
@@ -403,7 +430,7 @@ void dia_custom_function(dia_node* node) {
 
   // To see the function is a constant function
   // enjoy = "Enjoy!"
-  if (is_variable(node->next_function)) {
+  if (!is_variable(node->next_function)) {
     fprintf(yyout, "auto v%d = %s;\n", VARIABLE_INDEX, node->next_function->name);
     ++VARIABLE_INDEX;
   }
@@ -412,7 +439,7 @@ void dia_custom_function(dia_node* node) {
       dia_generate_code(_node);
   }
 
-  if (node->type != 0 /* void */)
+  if (node->type != 0 /* void */ && strcmp(node->next_function->name, "if"))
     fprintf(yyout, "return v%d;\n", --VARIABLE_INDEX);
   fputs("}\n", yyout);
 
