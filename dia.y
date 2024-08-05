@@ -136,7 +136,7 @@ dia: custom_func dia_main
          dia_debug_function_descriptor(_func->node, 0);
        }
 
-       if (!_QUIET) _dia_comment_generating();
+       if (!_QUIET && DIA_CODE_FILE_NAME) _dia_comment_generating();
 
        _dia_header_definition();
        for (custom_function_t* _func = $<func>1; _func != NULL; _func = _func->next) {

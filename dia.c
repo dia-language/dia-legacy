@@ -347,6 +347,7 @@ dia_node* dia_generate_code(dia_node* node) {
     {"bit_not", dia_bit_and, 1},
     /* Vector */
     {"vector", dia_vector, -1},
+    {"at", dia_vector_at, 2},
   };
 
   int i=0;

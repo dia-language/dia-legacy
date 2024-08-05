@@ -19,5 +19,6 @@
 #define _DIA_VECTOR_H
 
 dia_node* dia_vector(dia_node* node);
+dia_node* dia_vector_at(dia_node* node);
 
 #endif
