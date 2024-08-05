@@ -405,7 +405,7 @@ void _dia_comment_generating() {
   while(1) {
     char c = fgetc(source_file);
     DIA_DEBUG_2("read byte %02x from the %s file;\n", c, DIA_CODE_FILE_NAME);
-    if (c == EOF || c == (char)0xff) {
+    if (c == (char)0xff /* EOF */) {
       fputs("\n", yyout);
       break;
     }
