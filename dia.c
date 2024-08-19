@@ -174,7 +174,11 @@ dia_node* dia_puts(dia_node* node) {
   fputs("std::cout", yyout);
   for (int i=0; i<node->num_of_params; i++)
     fprintf(yyout, "<<%s", node->parameters[i]->name);
-  fputs("<<std::endl;\n", yyout);
+
+  if (_FASTER_IO)
+    fputs("<< \"\\n\"\n", yyout);
+  else
+    fputs("<<std::endl;\n", yyout);
 
   DIA_DEBUG("End of dia_puts\n");
   return NULL;

@@ -27,6 +27,7 @@ uint8_t _MAKE_FUNCTIONS_CONSTEXPR;
 uint8_t _MAKE_FUNCTIONS_PURE;
 uint8_t _FASTER_IO;
 uint8_t _QUIET;
+uint8_t _STATIC;
 
 void dia_interactive_banner() {
     puts("Dia: Switching to the interactive mode.");
@@ -43,8 +44,9 @@ void dia_help() {
   puts("  -v[v..]       Increase the level of verbosity (-v to -vvvv)");
   puts("  --stdout      Print compiled code to terminal");
   puts("  --no-compile  Do not compile, persist the source code.");
-  puts("  --skip-format Skip formatting the generated code using clang-format.\n");
+  puts("  --skip-format Skip formatting the generated code using clang-format.");
   puts("  --quiet       Do not generate file comment.");
+  puts("  --static      Generate static binary (equivalent of --static option in C++ compilers)\n");
   puts("Experimental Options:");
   puts("  --pure        Add [[gnu::pure]] macro to all custom functions.");
   puts("  --constexpr   Add constexpr keyword to all custom functions.");
@@ -88,6 +90,10 @@ void _quiet(char* argument) {
   _QUIET = 1;
 }
 
+void _static(char* argument) {
+  _STATIC = 1;
+}
+
 typedef struct {
   char* option;
   void (*handler)(char* option);
@@ -126,7 +132,8 @@ int main(int argc, char** argv) {
     {"--skip-format", _skip_format},
     {"--pure", _make_functions_pure},
     {"--constexpr", _make_functions_constexpr},
-    {"--faster-io", _faster_io}
+    {"--faster-io", _faster_io},
+    {"--static", _static}
   };
 
   // Setting up appropriate flags
@@ -176,16 +183,37 @@ int main(int argc, char** argv) {
     DIA_DEBUG("main.c: Finding C++ compiler...\n");
     DIA_DEBUG("clang++ %s\n", _generated_cpp_file_name);
 
+    int k = 1;
+    char* options[12] = {0,};
+
     pid_t pid = fork();
     int return_val = 0;
     if (pid == 0) {
-      int _status = execlp("clang++", "clang++", _generated_cpp_file_name, (void*)NULL);
+      options[0] = "clang++";
+
+      if (_STATIC) {
+        options[k++] = "--static";
+      }
+      options[k] = _generated_cpp_file_name;
+
+      DIA_DEBUG("Packed Option:");
+      for (int k=0; options[k]; k++)
+        fprintf(stderr, " %s", options[k]);
+      fputs("\n", stderr);
+
+      int _status = execvp("clang++", options);
 
       if (_status == -1 && errno == ENOENT) {
         DIA_DEBUG("clang++ not found (ENOENT). Trying to compile the generated code with g++..\n");
-        DIA_DEBUG("g++ %s\n", _generated_cpp_file_name);
 
-        _status = execlp("g++", "g++", _generated_cpp_file_name, (void*)NULL);
+        options[0] = "g++";
+
+        DIA_DEBUG("Packed Option:");
+        for (int k=0; options[k]; k++)
+          fprintf(stderr, " %s", options[k]);
+        fputs("\n", stderr);
+
+        _status = execvp("g++", options);
         if (_status == -1 && errno == ENOENT) {
           DIA_DEBUG("main.c: We couldn't find any relative C++ compiler.\n");
           return 1;
