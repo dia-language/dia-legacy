@@ -263,6 +263,7 @@ dia_node* dia_generate_code(dia_node* node) {
 
   custom_function_t* _func = custom_functions;
   for(; _func; _func = _func->next) {
+    DIA_DEBUG_2("dia_generate_code: comparing two thing; %s and %s\n", _func->node->name, node->name);
     if (!strcmp(node->name, _func->node->name)) {
       DIA_DEBUG("dia_generate_code: %s was the custom function.\n", _func->node->name);
 
@@ -298,20 +299,22 @@ dia_node* dia_generate_code(dia_node* node) {
 
   for (int i=0; i<node->num_of_params; i++) {
     if (node->parameters[i]->name != NULL) {
+      // If the parameter is function
       for (custom_function_t* _function = custom_functions; _function; _function = _function->next) {
+        DIA_DEBUG_2("dia_generate_code: searching from the custom functions; %s and %s\n",
+            _function->node->name, node->parameters[i]->name);
         if (!strcmp(_function->node->name, node->parameters[i]->name)) {
-          node->parameters[i]->type = _function->node->type;
+          node->parameters[i] = dia_generate_code(node->parameters[i]);
           break;
         }
       }
 
       for (int j=0; current_function && j<current_function->num_of_params; j++) {
+        DIA_DEBUG_2("dia_generate_code: searching from 'current_function'; %s and %s\n",
+            node->parameters[i]->name, current_function->parameters[j]->name);
         if (!strcmp(node->parameters[i]->name, current_function->parameters[j]->name))
           node->parameters[i]->type = current_function->parameters[i]->type;
       }
-
-      if (node->parameters[i]->parameters != NULL)
-        node->parameters[i] = dia_generate_code(node->parameters[i]);
     }
   }
 
