@@ -478,7 +478,7 @@ token: DIA_STRING         { $<node>$ = dia_string($1); }
          dia_node** params = (dia_node**)malloc(sizeof(dia_node*)*vec->num_of_params);
          for (dia_node* _node = $<node>2; _node != NULL; i++) {
            dia_node* tmp = _node->next_parameter;
-           _node->next_parameter == NULL;
+           _node->next_parameter = NULL;
            params[i] = _node;
            _node = tmp;
          }
