@@ -31,6 +31,7 @@ void dia_debug_function_descriptor(dia_node* node, int depth);
 // Pre-defined functions
 dia_node* dia_print(dia_node* node);
 dia_node* dia_puts(dia_node* node);
+dia_node* dia_gets(dia_node* node);
 
 void _dia_header_definition();
 void _dia_comment_generating();

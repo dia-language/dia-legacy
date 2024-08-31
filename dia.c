@@ -196,6 +196,17 @@ dia_node* dia_print(dia_node* node) {
   return NULL;
 }
 
+dia_node* dia_gets(dia_node* node) {
+  DIA_DEBUG("dia_gets\n");
+
+  if (node != NULL && node->num_of_params != 0) yyerror();
+
+  fprintf(yyout, "std::string v%d;\n", VARIABLE_INDEX);
+  fprintf(yyout, "std::cin>>v%d;\n", VARIABLE_INDEX);
+  DIA_DEBUG("It is about to return a string from the dia_gets function.\n");
+  return _dia_create_cpp_variable(DIA_STRING);
+}
+
 dia_node* dia_if(dia_node* node, uint8_t _recursed) {
   if (node->num_of_params != 3)
     yyerror("If clause does not have three parameters.");
@@ -330,6 +341,7 @@ dia_node* dia_generate_code(dia_node* node) {
     /* Printing */
     {"puts", dia_puts, -1},
     {"print", dia_print, -1},
+    {"gets", dia_gets, 0},
     /* Arithmetic */
     {"plus", dia_plus, 2},
     {"minus", dia_minus, 2},
