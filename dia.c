@@ -176,7 +176,7 @@ dia_node* dia_puts(dia_node* node) {
     fprintf(yyout, "<<%s", node->parameters[i]->name);
 
   if (_FASTER_IO)
-    fputs("<< \"\\n\"\n", yyout);
+    fputs("<<\"\\n\"\n", yyout);
   else
     fputs("<<std::endl;\n", yyout);
 
@@ -272,6 +272,8 @@ dia_node* dia_generate_code(dia_node* node) {
     return NULL;
   }
 
+  // If the function in parameter is custom created function,
+  // generate code and return v1, v2 ... variable.
   custom_function_t* _func = custom_functions;
   for(; _func; _func = _func->next) {
     DIA_DEBUG_2("dia_generate_code: comparing two thing; %s and %s\n", _func->node->name, node->name);
@@ -305,27 +307,6 @@ dia_node* dia_generate_code(dia_node* node) {
       node->type = current_function->parameters[i]->type;
       fputs(node->name, yyout);
       return node;
-    }
-  }
-
-  for (int i=0; i<node->num_of_params; i++) {
-    if (node->parameters[i]->name != NULL) {
-      // If the parameter is function
-      for (custom_function_t* _function = custom_functions; _function; _function = _function->next) {
-        DIA_DEBUG_2("dia_generate_code: searching from the custom functions; %s and %s\n",
-            _function->node->name, node->parameters[i]->name);
-        if (!strcmp(_function->node->name, node->parameters[i]->name)) {
-          node->parameters[i] = dia_generate_code(node->parameters[i]);
-          break;
-        }
-      }
-
-      for (int j=0; current_function && j<current_function->num_of_params; j++) {
-        DIA_DEBUG_2("dia_generate_code: searching from 'current_function'; %s and %s\n",
-            node->parameters[i]->name, current_function->parameters[j]->name);
-        if (!strcmp(node->parameters[i]->name, current_function->parameters[j]->name))
-          node->parameters[i]->type = current_function->parameters[i]->type;
-      }
     }
   }
 
@@ -369,6 +350,39 @@ dia_node* dia_generate_code(dia_node* node) {
     {"at", dia_vector_at, 2},
   };
 
+  for (int i=0; i<node->num_of_params; i++) {
+    if (node->parameters[i]->name != NULL) {
+      // If the parameter is one of the custom functions
+      for (custom_function_t* _function = custom_functions; _function; _function = _function->next) {
+        DIA_DEBUG_2("dia_generate_code: searching from the custom functions; %s and %s\n",
+            _function->node->name, node->parameters[i]->name);
+        if (!strcmp(_function->node->name, node->parameters[i]->name)) {
+          node->parameters[i] = dia_generate_code(node->parameters[i]);
+          break;
+        }
+      }
+
+      // If the parameter is one of the predefined functions
+      int size = sizeof(functions) / sizeof(functions[0]);
+      for (int j=0; j<size; j++) {
+        DIA_DEBUG_2("dia_generate_code: searching from the predefined functions; %s and %s\n",
+            node->parameters[i]->name, functions[j].identifier);
+        if (!strcmp(node->parameters[i]->name, functions[j].identifier)) {
+          node->parameters[i] = dia_generate_code(node->parameters[i]);
+        }
+      }
+
+      // If the identifier is one of the parameter
+      for (int j=0; current_function && j<current_function->num_of_params; j++) {
+        DIA_DEBUG_2("dia_generate_code: searching from 'current_function'; %s and %s\n",
+            node->parameters[i]->name, current_function->parameters[j]->name);
+        if (!strcmp(node->parameters[i]->name, current_function->parameters[j]->name))
+          node->parameters[i]->type = current_function->parameters[i]->type;
+      }
+    }
+  }
+
+  // Jump to the function if the
   int i=0;
   int size = sizeof(functions) / sizeof(functions[0]);
   for (; i<size; i++) {
