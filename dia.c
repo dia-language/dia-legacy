@@ -229,6 +229,8 @@ dia_node* dia_if(dia_node* node, uint8_t _recursed) {
       node->parameters[1]->type == DIA_INTEGER ||
       node->parameters[1]->type == DIA_DOUBLE)
     fprintf(yyout, "return %s;\n", node->parameters[1]->name);
+  else if (node->parameters[1]->type == 0 /* void */)
+    dia_generate_code(node->parameters[1]);
   else {
     dia_generate_code(node->parameters[1]);
     fprintf(yyout, "return v%d;\n", --VARIABLE_INDEX);
