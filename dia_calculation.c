@@ -341,6 +341,11 @@ dia_node* dia_bit_not(dia_node* node) {
 
 
 dia_node* _dia_create_cpp_variable(DIA_TOKEN_TYPE type) {
+  if (VARIABLE_INDEX < 0) {
+    DIA_DEBUG("VARIABLE_INDEX is negative.\n");
+    yyerror("VARIABLE_INDEX is negative.");
+  }
+
   char _name[8];
   snprintf(_name, 7, "v%d", VARIABLE_INDEX);
   dia_node* _node = dia_create_node(_name, type);
