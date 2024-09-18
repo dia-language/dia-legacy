@@ -79,8 +79,13 @@ That is the biggest reason I started this project. But there are some minor reas
 * I wanted to make an easy-to-use functional programming language. Not too complicated like Haskell, and not too minimized like Lisp.
 * The project was started to make several useful functions, `split` for example, to be implemented in C++
   * I came up with initial idea while solving several competitive programming challenges
-  * The `lodash` project in JavaScript inspired me.
+  * The `lodash` project in JavaScript inspired me. Lodash is a JS library provides some useful functions while programming in JavaScript.
 * I wanted to make my programming language tool to be used inside embedded system.
   * I wanted to make useful tools while anayli
 * I wanted to make a programming language, whatever in any form. That is of the same mind that a kid want to make his own toy of his own.
   * As mentioned, I wanted my languages to be used in code golfing, and embedded system.
+
+### Which programming language/concept influenced you the most?
+
+* RxJS, the concept
+* Ruby, the programming language design
