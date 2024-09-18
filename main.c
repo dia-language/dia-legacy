@@ -110,10 +110,8 @@ int main(int argc, char** argv) {
   }
   fputs("]\n", stderr);
 
-  if (argc == 1) dia_interactive_banner();
-
   // diac --help
-  else if (argc == 2 && !strncmp(argv[1], "--help", 6)) {
+  if (argc == 2 && !strncmp(argv[1], "--help", 6)) {
     dia_help();
     return 0;
   }
@@ -123,6 +121,8 @@ int main(int argc, char** argv) {
     DIA_CODE_FILE_NAME = argv[1];
   }
 
+  if (DIA_CODE_FILE_NAME == NULL)
+    dia_interactive_banner();
 
   // To deal with options without getopt().
   dia_option_table table[] = {
@@ -169,6 +169,12 @@ int main(int argc, char** argv) {
   yyparse();
   if (yyout != stdout)
     fclose(yyout);
+
+  if (DIA_CODE_FILE_NAME == NULL) {
+    DIA_DEBUG("It is interactive mode, so compiling and formatting are disabled.\n");
+    DIA_DEBUG("All jobs were done!\n");
+    return 0;
+  }
 
   if (_PRINT_TO_STDOUT) {
     DIA_DEBUG("Compiling and formatting are disabled if the --stdout flag was set.\n");
