@@ -68,6 +68,18 @@ cd builddir
 ninja
 ```
 
+### Termux (Android)
+
+The Dia compiler is also intended to work on Termux.
+
+Run
+
+```
+pkg install git make bison flex clang
+```
+
+to install necessary packages. Then type `make` to build the Dia compiler.
+
 ## QnA
 
 ### Why did you started this (kind of) project?
