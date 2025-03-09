@@ -101,3 +101,4 @@ That is the biggest reason I started this project. But there are some minor reas
 
 * RxJS, the concept
 * Ruby, the programming language design
+* PyFunctional, the functions that are going to be included in the standard library (ongoing)
